@@ -147,6 +147,12 @@ export default function Firs({ rbac }: { rbac: RoleState }) {
             <option value="">All categories</option>
             {categories.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
+          <button
+            onClick={() => navigate('/firs/new')}
+            className="flex items-center gap-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md px-3 py-1.5"
+          >
+            + Add FIR
+          </button>
         </div>
       </div>
 

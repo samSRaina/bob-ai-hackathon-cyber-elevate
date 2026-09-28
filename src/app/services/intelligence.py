@@ -6,6 +6,7 @@ Every public method takes a Scope object and applies it to all queries.
 """
 from __future__ import annotations
 
+from collections import defaultdict
 from typing import Optional
 from sqlmodel import Session, select, col
 
@@ -128,6 +129,121 @@ def get_fir_briefs(session: Session, fir_ids: list[int]) -> dict[int, dict]:
         }
         for f in rows
     }
+
+
+# ---------------------------------------------------------------------------
+# Similarity check — draft FIR (Add FIR form), no persistence
+# ---------------------------------------------------------------------------
+
+def check_similarity(session: Session, draft) -> list[dict]:
+    """
+    Compare a draft FIR (not yet saved) against every existing suspect/FIR
+    using the same evidence tiers as the real entity-resolution engine
+    (exact identifiers, phonetic/fuzzy name match, MO-embedding similarity),
+    without writing anything to the database.
+
+    `draft` is a schemas.fir_schema.SimilarityCheckRequest.
+
+    Returns a list of match dicts sorted by confidence descending, one per
+    matching FIR (its best-evidence suspect + reasons), capped to 15.
+    """
+    from app.engine.entity_resolution import SuspectRecord, _exact_identifiers, _should_block, _name_similarity
+    from app.engine.mo_similarity import MORecord, compute_mo_edges
+
+    if not draft.suspects and not (draft.modus_operandi or "").strip():
+        return []
+
+    suspects_db = list(session.exec(select(SuspectEntity)).all())
+    fir_ids = list({s.fir_id for s in suspects_db})
+    firs_db = {
+        f.id: f for f in session.exec(
+            select(FIRRecord).where(col(FIRRecord.id).in_(fir_ids))
+        ).all()
+    } if fir_ids else {}
+    stations_db = {s.id: s for s in session.exec(select(PoliceStation)).all()}
+
+    def _fir_location(fir: FIRRecord) -> tuple[str, str]:
+        if fir.station_id and fir.station_id in stations_db:
+            st = stations_db[fir.station_id]
+            return (st.district, st.city)
+        return (fir.district, fir.district)
+
+    existing_records: list[SuspectRecord] = []
+    for s in suspects_db:
+        fir = firs_db.get(s.fir_id)
+        if not fir:
+            continue
+        district, city = _fir_location(fir)
+        existing_records.append(SuspectRecord(
+            suspect_id=s.id, fir_id=s.fir_id, name=s.name, alias=s.alias,
+            aliases=s.aliases or [], phone_numbers=s.phone_numbers or [],
+            vehicle_numbers=s.vehicle_numbers or [], modus_operandi=fir.modus_operandi or "",
+            district=district, city=city, station_id=fir.station_id or 0,
+        ))
+
+    # Evidence per candidate FIR id: list of (reason, score, is_exact)
+    fir_evidence: dict[int, list[tuple[str, float, bool]]] = defaultdict(list)
+
+    # --- Draft suspects vs every existing suspect: exact identifiers + name similarity ---
+    for i, ds in enumerate(draft.suspects):
+        draft_record = SuspectRecord(
+            suspect_id=-(i + 1), fir_id=-1, name=ds.name, alias=ds.alias,
+            aliases=[], phone_numbers=ds.phone_numbers, vehicle_numbers=ds.vehicle_numbers,
+            modus_operandi=draft.modus_operandi or "", district="", city="", station_id=0,
+        )
+        for existing in existing_records:
+            exact_reasons = _exact_identifiers(draft_record, existing)
+            if exact_reasons:
+                for r in exact_reasons:
+                    fir_evidence[existing.fir_id].append((r, 0.97, True))
+            elif _should_block(draft_record, existing):
+                score = _name_similarity(draft_record, existing)
+                if score * 100 >= 82:
+                    a_names = ", ".join(draft_record.all_name_tokens()) or "(unknown)"
+                    b_names = ", ".join(existing.all_name_tokens()) or "(unknown)"
+                    reason = f"name similarity {score:.2f}: '{a_names}' ~ '{b_names}'"
+                    fir_evidence[existing.fir_id].append((reason, score, False))
+
+    # --- Draft MO text vs every existing FIR's MO text ---
+    mo_text = (draft.modus_operandi or "").strip()
+    if mo_text:
+        records = [MORecord(suspect_id=-9999, fir_id=-1, mo_text=mo_text)]
+        seen_firs: set[int] = set()
+        for fir in firs_db.values():
+            if fir.id in seen_firs or not (fir.modus_operandi or "").strip():
+                continue
+            seen_firs.add(fir.id)
+            records.append(MORecord(suspect_id=fir.id, fir_id=fir.id, mo_text=fir.modus_operandi))
+        try:
+            edges = compute_mo_edges(records)
+        except Exception:
+            edges = []
+        for sid_a, sid_b, score, reason in edges:
+            other_fir_id = sid_b if sid_a == -9999 else sid_a
+            fir_evidence[other_fir_id].append((reason, score, False))
+
+    if not fir_evidence:
+        return []
+
+    fir_briefs = get_fir_briefs(session, list(fir_evidence.keys()))
+
+    matches = []
+    for fid, evidence in fir_evidence.items():
+        brief = fir_briefs.get(fid)
+        if not brief:
+            continue
+        has_exact = any(e[2] for e in evidence)
+        max_score = max(e[1] for e in evidence)
+        confidence = min(0.97, max_score) if has_exact else min(0.80, max_score)
+        reasons = list(dict.fromkeys(e[0] for e in evidence))
+        matches.append({
+            **brief,
+            "confidence": round(confidence, 4),
+            "match_reasons": reasons,
+        })
+
+    matches.sort(key=lambda m: m["confidence"], reverse=True)
+    return matches[:15]
 
 
 # ---------------------------------------------------------------------------
@@ -370,6 +486,81 @@ def list_alerts(session: Session, scope: Scope, limit: int = 50) -> list[Alert]:
 
 def list_all_stations(session: Session) -> list[PoliceStation]:
     return list(session.exec(select(PoliceStation).order_by(PoliceStation.name)).all())
+
+
+# ---------------------------------------------------------------------------
+# FIR creation — the "Add FIR" form
+# ---------------------------------------------------------------------------
+
+def create_fir(session: Session, draft) -> FIRRecord:
+    """
+    Persist a new FIR (+ suspects) from an Add-FIR form submission, then
+    re-run full syndicate detection so it's immediately clustered against
+    every existing FIR — the same engine the seed data and /detect use, so
+    there's exactly one source of truth for "what counts as a match".
+
+    `draft` is a schemas.fir_schema.FIRCreateRequest.
+    """
+    from app.models.fir_models import utcnow
+    from app.data.generate_seed_firs import ACTS_BY_CATEGORY
+    from app.seed import run_syndicate_detection
+
+    station = session.get(PoliceStation, draft.station_id)
+    if not station:
+        raise ValueError(f"Unknown station_id {draft.station_id}")
+
+    year = draft.fir_date_time.year
+    existing_count = session.exec(
+        select(FIRRecord).where(FIRRecord.station_id == draft.station_id)
+    ).all()
+    seq = len(existing_count) + 1
+    fir_number = f"{year:04d}/{draft.station_id:02d}/{seq:04d}"
+
+    fir = FIRRecord(
+        district=station.district,
+        police_station=station.name,
+        year=year,
+        fir_number=fir_number,
+        fir_date_time=draft.fir_date_time,
+        acts_sections=ACTS_BY_CATEGORY.get(draft.crime_category, []),
+        information_type=draft.information_type,
+        occurrence_address=draft.occurrence_address,
+        complainant_name=draft.complainant_name,
+        complainant_phone=draft.complainant_phone,
+        complainant_mobile=draft.complainant_mobile,
+        narrative=draft.narrative,
+        modus_operandi=draft.modus_operandi,
+        action_taken="registered_and_investigating",
+        crime_category=draft.crime_category,
+        station_id=draft.station_id,
+    )
+    session.add(fir)
+    session.flush()  # assign fir.id
+
+    for ds in draft.suspects:
+        suspect = SuspectEntity(
+            fir_id=fir.id,
+            name=ds.name,
+            alias=ds.alias,
+            aliases=[ds.alias] if ds.alias else [],
+            relative_name=ds.relative_name,
+            present_address=ds.present_address,
+            sex=ds.sex,
+            phone_numbers=ds.phone_numbers,
+            vehicle_numbers=ds.vehicle_numbers,
+        )
+        session.add(suspect)
+
+    session.commit()
+    session.refresh(fir)
+
+    # Re-cluster against every existing FIR so this one's correlation is
+    # available immediately, and so any newly-formed pattern touching older
+    # FIRs is picked up too (not just this FIR's own matches).
+    run_syndicate_detection(session, triggering_fir_id=fir.id)
+    session.refresh(fir)
+
+    return fir
 
 
 def list_scoped_stations(session: Session, scope: Scope) -> list[PoliceStation]:

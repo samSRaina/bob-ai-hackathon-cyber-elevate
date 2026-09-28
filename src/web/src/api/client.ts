@@ -16,14 +16,15 @@ export async function apiFetch<T>(
   path: string,
   role: string,
   stationId: string | null,
-  params?: Record<string, string>
+  params?: Record<string, string>,
+  init?: RequestInit
 ): Promise<T> {
   let url = `${BASE_URL}${path}`
   if (params) {
     const qs = new URLSearchParams(params).toString()
     if (qs) url += `?${qs}`
   }
-  const res = await fetch(url, { headers: buildHeaders(role, stationId) })
+  const res = await fetch(url, { ...init, headers: buildHeaders(role, stationId) })
   if (!res.ok) throw new Error(`API error ${res.status}: ${await res.text()}`)
   return res.json()
 }

@@ -11,6 +11,7 @@ from sqlmodel import Session
 from app.core.database import get_session
 from app.core.rbac import Scope, get_scope
 from app.services import intelligence as svc
+from app.schemas.fir_schema import SimilarityCheckRequest, FIRCreateRequest
 
 router = APIRouter()
 
@@ -162,6 +163,35 @@ def list_firs(
         "firs": [_fir_to_dict(f, cluster=cluster_map.get(f.id)) for f in firs],
         "total": len(firs),
     }
+
+
+@router.post("/check-similarity")
+def check_similarity(
+    draft: SimilarityCheckRequest,
+    session: Session = Depends(get_session),
+    scope: Scope = Depends(get_scope),  # not used for scoping — see check_similarity docstring
+):
+    """
+    Live similarity check for the Add FIR form — nothing is persisted. Runs
+    the draft's suspects/MO text through the same evidence tiers as the real
+    entity-resolution engine and returns candidate matching FIRs, so an
+    officer sees "you may be interested in these" before they even submit.
+    """
+    matches = svc.check_similarity(session, draft)
+    return {"matches": matches}
+
+
+@router.post("")
+def create_fir(
+    draft: FIRCreateRequest,
+    session: Session = Depends(get_session),
+    scope: Scope = Depends(get_scope),
+):
+    fir = svc.create_fir(session, draft)
+    suspects = svc.get_fir_suspects(session, fir.id)
+    cluster = svc.get_fir_cluster(session, fir.id)
+    linked_firs = svc.get_fir_briefs(session, cluster.linked_fir_ids or []) if cluster else None
+    return _fir_to_dict(fir, suspects=suspects, cluster=cluster, linked_firs=linked_firs)
 
 
 @router.get("/{fir_id}")
