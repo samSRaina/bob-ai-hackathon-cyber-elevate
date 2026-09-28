@@ -219,24 +219,24 @@ function FIRDetail({ fir, onBack }: { fir: FIR; onBack: () => void }) {
           <div className="flex items-center gap-2 mb-2">
             <span className="font-semibold text-gray-800">Pattern Match</span>
             {fir.correlation.syndicate_flag && <Badge variant="red">🚨 SYNDICATE</Badge>}
-            <Badge variant="purple">{fir.correlation.linked_fir_ids.length} FIRs linked</Badge>
+            <Badge variant="purple">{(fir.correlation.linked_fir_ids || []).length} FIRs linked</Badge>
           </div>
           <div className="mb-2 w-40">
             <ConfidenceBar value={fir.correlation.confidence_score} />
           </div>
-          <ReasoningLine reasons={fir.correlation.match_reasons} gloss={fir.correlation.reasoning_gloss} />
+          <ReasoningLine reasons={fir.correlation.match_reasons || []} gloss={fir.correlation.reasoning_gloss} />
           <div className="mt-2 text-xs text-gray-500">
-            Districts: {fir.correlation.districts_involved.join(', ')}
+            Districts: {(fir.correlation.districts_involved || []).join(', ')}
           </div>
 
           {/* Related FIRs — brief, click for more + a way to jump to that FIR's own page */}
-          {fir.correlation.linked_firs.length > 0 && (
+          {(fir.correlation.linked_firs || []).length > 0 && (
             <div className="mt-3 pt-3 border-t border-black/5">
               <div className="text-xs font-semibold text-gray-500 uppercase mb-1.5">
-                Related FIRs ({fir.correlation.linked_firs.length})
+                Related FIRs ({(fir.correlation.linked_firs || []).length})
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {fir.correlation.linked_firs.map((lf) => (
+                {(fir.correlation.linked_firs || []).map((lf) => (
                   <button
                     key={lf.id}
                     onClick={() => setPopupFir(lf)}

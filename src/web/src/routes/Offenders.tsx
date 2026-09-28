@@ -107,7 +107,7 @@ export default function Offenders({ rbac }: { rbac: RoleState }) {
           {/* Linked FIRs — shown by their human-readable FIR number, same as the FIRs list */}
           <div className="mt-3 flex flex-wrap gap-1">
             <span className="text-xs text-gray-500 mr-1">Linked FIRs:</span>
-            {c.linked_firs.map((lf) => (
+            {(c.linked_firs || []).map((lf) => (
               <Link
                 key={lf.id}
                 to={`/firs/${lf.id}`}

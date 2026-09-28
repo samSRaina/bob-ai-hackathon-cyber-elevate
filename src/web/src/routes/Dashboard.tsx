@@ -203,10 +203,10 @@ function ClusterCard({ cluster }: { cluster: Cluster }) {
         </div>
       </div>
       <ReasoningLine reasons={cluster.match_reasons} gloss={cluster.reasoning_gloss} />
-      {cluster.linked_firs.length > 0 && (
+      {(cluster.linked_firs || []).length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1">
           <span className="text-xs text-gray-500 mr-1">Linked FIRs:</span>
-          {cluster.linked_firs.map((lf) => (
+          {(cluster.linked_firs || []).map((lf) => (
             <Link
               key={lf.id}
               to={`/firs/${lf.id}`}
