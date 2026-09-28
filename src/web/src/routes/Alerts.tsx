@@ -39,23 +39,23 @@ export default function Alerts({ rbac }: { rbac: RoleState }) {
   }, [rbac.role, rbac.stationId])
 
   if (rbac.role !== 'STATE_ADMIN' && !rbac.stationId) {
-    return <div className="text-center py-20 text-gray-500">Select a station to view alerts.</div>
+    return <div className="state-empty">Select a station to view alerts.</div>
   }
 
-  if (loading) return <div className="text-center py-20 text-gray-400">Loading…</div>
-  if (error) return <div className="text-red-600 p-4 rounded bg-red-50">Error: {error}</div>
+  if (loading) return <div className="state-empty">Loading…</div>
+  if (error) return <div className="banner-error">Error: {error}</div>
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <h1 className="text-xl font-bold text-gray-900">Alerts</h1>
+    <div className="space-y-3">
+      <div className="mb-1 flex items-center gap-2">
+        <h1 className="page-title">Alerts</h1>
         <Badge variant={alerts.some((a) => a.kind === 'became_syndicate') ? 'red' : 'default'}>
           {alerts.length} total
         </Badge>
       </div>
 
       {alerts.length === 0 && (
-        <Card><p className="text-gray-400 text-sm">No alerts for this scope.</p></Card>
+        <Card><p className="text-[13px] text-zinc-500">No alerts for this scope.</p></Card>
       )}
 
       {alerts.map((alert) => {
@@ -64,36 +64,37 @@ export default function Alerts({ rbac }: { rbac: RoleState }) {
         return (
           <Card
             key={alert.id}
-            className={alert.kind === 'became_syndicate' ? 'border-red-300 bg-red-50' : ''}
+            alert={alert.kind === 'became_syndicate'}
           >
             <div className="flex items-start gap-3">
               <Icon
-                size={18}
+                size={15}
+                strokeWidth={1.75}
                 className={
-                  alert.kind === 'became_syndicate' ? 'text-red-500 mt-0.5 shrink-0' :
-                  alert.kind === 'cluster_grew' ? 'text-yellow-500 mt-0.5 shrink-0' :
-                  'text-blue-500 mt-0.5 shrink-0'
+                  alert.kind === 'became_syndicate' ? 'mt-0.5 shrink-0 text-red-700' :
+                  alert.kind === 'cluster_grew' ? 'mt-0.5 shrink-0 text-amber-700' :
+                  'mt-0.5 shrink-0 text-zinc-500'
                 }
               />
-              <div className="flex-1">
-                <div className="flex items-center gap-2 flex-wrap mb-1">
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex flex-wrap items-center gap-2">
                   <Badge variant={config.variant}>{config.label}</Badge>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-2xs text-zinc-500">
                     {alert.scope_level}: {alert.scope_ref}
                   </span>
                   {alert.triggering_fir_id && (
                     <a
                       href={`/firs/${alert.triggering_fir_id}`}
-                      className="text-xs text-blue-600 hover:underline"
+                      className="link text-2xs"
                     >
                       FIR #{alert.triggering_fir_id}
                     </a>
                   )}
-                  <span className="text-xs text-gray-400 ml-auto">
+                  <span className="ml-auto text-2xs tabular-nums text-zinc-400">
                     {alert.created_at?.slice(0, 16).replace('T', ' ')}
                   </span>
                 </div>
-                <p className="text-sm text-gray-800 mb-2">{alert.message}</p>
+                <p className="mb-2 text-[13px] text-zinc-800">{alert.message}</p>
                 <ReasoningLine reasons={alert.match_reasons} />
               </div>
             </div>

@@ -57,43 +57,43 @@ export default function Graph({ rbac }: { rbac: RoleState }) {
   }, [rbac.role, rbac.stationId])
 
   if (rbac.role !== 'STATE_ADMIN' && !rbac.stationId) {
-    return <div className="text-center py-20 text-gray-500">Select a station to view graph.</div>
+    return <div className="state-empty">Select a station to view graph.</div>
   }
 
-  if (loading) return <div className="text-center py-20 text-gray-400">Loading graph…</div>
-  if (error) return <div className="text-red-600 p-4 rounded bg-red-50">Error: {error}</div>
+  if (loading) return <div className="state-empty">Loading graph…</div>
+  if (error) return <div className="banner-error">Error: {error}</div>
   if (!graphData) return null
 
   const nodeCount = graphData.nodes.length
   const edgeCount = graphData.links.length
 
   const nodeColor = (node: any) => {
-    if (node.type === 'station') return '#6366f1'
-    if (node.type === 'fir') return '#60a5fa'
-    if (node.cluster) return '#f87171'  // clustered suspect
-    return '#94a3b8'
+    if (node.type === 'station') return '#71717a'
+    if (node.type === 'fir') return '#3e4c59'
+    if (node.cluster) return '#9f1239'
+    return '#a1a1aa'
   }
 
   const linkColor = (link: any) => {
-    if (link.edge_type === 'LINKED_TO') return link.syndicate ? '#ef4444' : '#3b82f6'
-    if (link.edge_type === 'IN_FIR') return '#e2e8f0'
-    return '#d1d5db'
+    if (link.edge_type === 'LINKED_TO') return link.syndicate ? '#9f1239' : '#3e4c59'
+    if (link.edge_type === 'IN_FIR') return '#e4e4e7'
+    return '#d4d4d8'
   }
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-4">
-        <h1 className="text-xl font-bold text-gray-900">Syndicate Graph</h1>
-        <span className="text-sm text-gray-500">{nodeCount} nodes · {edgeCount} edges</span>
-        <div className="flex gap-3 ml-4 text-xs">
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-400 inline-block" /> Suspect (clustered)</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-400 inline-block" /> FIR</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-indigo-400 inline-block" /> Station</span>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <h1 className="page-title">Syndicate Graph</h1>
+        <span className="page-meta">{nodeCount} nodes · {edgeCount} edges</span>
+        <div className="flex gap-3 text-2xs text-zinc-500">
+          <span className="flex items-center gap-1.5"><span className="inline-block h-2 w-2 rounded-full bg-rose-800" /> Suspect</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block h-2 w-2 rounded-full bg-accent" /> FIR</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block h-2 w-2 rounded-full bg-zinc-500" /> Station</span>
         </div>
       </div>
 
-      <div className="flex gap-3 items-start">
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden flex-1" style={{ height: '600px' }} ref={containerRef}>
+      <div className="flex items-start gap-3">
+        <div className="flex-1 overflow-hidden rounded-md border border-zinc-200 bg-white" style={{ height: '600px' }} ref={containerRef}>
           {ForceGraph && (
             <ForceGraph
               graphData={{ nodes: graphData.nodes, links: graphData.links }}
@@ -103,7 +103,7 @@ export default function Graph({ rbac }: { rbac: RoleState }) {
               linkColor={linkColor}
               linkWidth={(link: any) => link.edge_type === 'LINKED_TO' ? 2 : 1}
               linkDirectionalParticles={(link: any) => link.edge_type === 'LINKED_TO' ? 2 : 0}
-              linkDirectionalParticleColor={(link: any) => link.syndicate ? '#ef4444' : '#3b82f6'}
+              linkDirectionalParticleColor={(link: any) => link.syndicate ? '#9f1239' : '#3e4c59'}
               onNodeClick={(node: any) => setSelected({ kind: 'node', data: node })}
               onLinkClick={(link: any) => {
                 if (link.edge_type === 'LINKED_TO') setSelected({ kind: 'link', data: link })
@@ -139,7 +139,7 @@ export default function Graph({ rbac }: { rbac: RoleState }) {
               }}
               width={containerRef.current?.clientWidth || 900}
               height={600}
-              backgroundColor="#f8fafc"
+              backgroundColor="#fafafa"
             />
           )}
         </div>
@@ -147,33 +147,33 @@ export default function Graph({ rbac }: { rbac: RoleState }) {
         {/* Reasoning panel — every clustering relationship's evidence is shown here on click,
             for both a suspect/FIR node and a LINKED_TO edge between clustered suspects */}
         {selected && (
-          <div className="w-72 shrink-0 bg-white rounded-lg border border-gray-200 p-4" style={{ height: '600px', overflowY: 'auto' }}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-gray-900 text-sm">
+          <div className="w-72 shrink-0 overflow-y-auto rounded-md border border-zinc-200 bg-white p-4" style={{ height: '600px' }}>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-[13px] font-semibold text-zinc-900">
                 {selected.kind === 'link' ? 'Match Reasoning' : 'Node Details'}
               </h3>
-              <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setSelected(null)} className="icon-btn" aria-label="Close">
                 <X size={16} />
               </button>
             </div>
 
             {selected.kind === 'node' && (
-              <div className="space-y-2 text-sm">
-                <div className="font-medium text-gray-800">{selected.data.label}</div>
-                <div className="text-xs text-gray-500 uppercase">{selected.data.type}</div>
+              <div className="space-y-2 text-[13px]">
+                <div className="font-medium text-zinc-900">{selected.data.label}</div>
+                <div className="text-2xs text-zinc-500">{selected.data.type}</div>
                 {selected.data.crime_category && (
-                  <div><span className="text-gray-400 text-xs">Category: </span>{selected.data.crime_category}</div>
+                  <div><span className="text-2xs text-zinc-400">Category </span>{selected.data.crime_category}</div>
                 )}
                 {selected.data.district && (
-                  <div><span className="text-gray-400 text-xs">District: </span>{selected.data.district}</div>
+                  <div><span className="text-2xs text-zinc-400">District </span>{selected.data.district}</div>
                 )}
                 {selected.data.cluster && (
-                  <div className="text-xs text-gray-400 break-all">Cluster: {selected.data.cluster}</div>
+                  <div className="break-all text-2xs text-zinc-400">Cluster {selected.data.cluster}</div>
                 )}
                 {selected.data.type === 'fir' && (
                   <button
                     onClick={() => navigate(`/firs/${selected.data.id.replace('fir:', '')}`)}
-                    className="mt-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded px-2 py-1"
+                    className="btn btn-primary mt-2"
                   >
                     View FIR page
                   </button>
@@ -182,10 +182,10 @@ export default function Graph({ rbac }: { rbac: RoleState }) {
             )}
 
             {selected.kind === 'link' && (
-              <div className="space-y-2 text-sm">
-                {selected.data.syndicate && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">🚨 Syndicate link</span>}
+              <div className="space-y-2 text-[13px]">
+                {selected.data.syndicate && <span className="inline-flex rounded-sm bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-800 ring-1 ring-inset ring-red-200">Syndicate link</span>}
                 {typeof selected.data.confidence === 'number' && (
-                  <div className="text-xs text-gray-500">Confidence: <span className="font-mono text-gray-800">{Math.round(selected.data.confidence * 100)}%</span></div>
+                  <div className="text-2xs text-zinc-500">Confidence <span className="font-mono tabular-nums text-zinc-800">{Math.round(selected.data.confidence * 100)}%</span></div>
                 )}
                 <div className="text-xs font-semibold text-gray-500 uppercase mt-2">Why this is a match</div>
                 {(selected.data.reasons || []).length > 0 ? (

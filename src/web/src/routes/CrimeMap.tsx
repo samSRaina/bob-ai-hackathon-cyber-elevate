@@ -38,19 +38,19 @@ interface GeoData {
 }
 
 const CRIME_COLORS: Record<string, string> = {
-  'Theft': '#f59e0b',
-  'Assault': '#ef4444',
-  'Robbery': '#dc2626',
-  'Cyber Fraud': '#7c3aed',
-  'Fraud': '#f97316',
-  'Murder': '#991b1b',
-  'Kidnapping': '#b91c1c',
-  'POCSO': '#be185d',
-  'Dowry Harassment': '#c2410c',
+  'Theft': '#a16207',
+  'Assault': '#b91c1c',
+  'Robbery': '#9f1239',
+  'Cyber Fraud': '#3e4c59',
+  'Fraud': '#9a3412',
+  'Murder': '#7f1d1d',
+  'Kidnapping': '#881337',
+  'POCSO': '#9f1239',
+  'Dowry Harassment': '#92400e',
 }
 
 function getCategoryColor(cat: string): string {
-  return CRIME_COLORS[cat] || '#3b82f6'
+  return CRIME_COLORS[cat] || '#3e4c59'
 }
 
 export default function CrimeMap({ rbac }: { rbac: RoleState }) {
@@ -91,11 +91,11 @@ export default function CrimeMap({ rbac }: { rbac: RoleState }) {
   }, [rbac.role, rbac.stationId, categoryFilter])
 
   if (rbac.role !== 'STATE_ADMIN' && !rbac.stationId) {
-    return <div className="text-center py-20 text-gray-500">Select a station to view map.</div>
+    return <div className="state-empty">Select a station to view map.</div>
   }
 
-  if (loading) return <div className="text-center py-20 text-gray-400">Loading map…</div>
-  if (error) return <div className="text-red-600 p-4 rounded bg-red-50">Error: {error}</div>
+  if (loading) return <div className="state-empty">Loading map…</div>
+  if (error) return <div className="banner-error">Error: {error}</div>
 
   const categories = geoData
     ? [...new Set(geoData.spots.map((s) => s.crime_category))].sort()
@@ -105,27 +105,25 @@ export default function CrimeMap({ rbac }: { rbac: RoleState }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">UP Crime Map</h1>
-        <div className="flex gap-2 items-center">
-          {/* Layer toggle */}
-          <div className="flex rounded-md overflow-hidden border border-gray-300">
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="page-title">UP Crime Map</h1>
+        <div className="flex items-center gap-2">
+          <div className="seg">
             <button
-              className={`px-3 py-1.5 text-sm ${layerMode === 'spots' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
+              className={`seg-btn ${layerMode === 'spots' ? 'seg-btn-on' : ''}`}
               onClick={() => setLayerMode('spots')}
             >
               Spot Pins
             </button>
             <button
-              className={`px-3 py-1.5 text-sm ${layerMode === 'heatmap' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
+              className={`seg-btn ${layerMode === 'heatmap' ? 'seg-btn-on' : ''}`}
               onClick={() => setLayerMode('heatmap')}
             >
               Heatmap
             </button>
           </div>
-          {/* Category filter */}
           <select
-            className="text-sm border border-gray-300 rounded-md px-2 py-1.5"
+            className="select-inline"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
           >
@@ -135,11 +133,11 @@ export default function CrimeMap({ rbac }: { rbac: RoleState }) {
         </div>
       </div>
 
-      <div className="text-xs text-gray-500">
+      <div className="text-2xs text-zinc-500">
         {geoData?.spots.length ?? 0} FIRs plotted · {geoData?.heatmap.length ?? 0} heat points
       </div>
 
-      <div className="rounded-lg overflow-hidden border border-gray-200" style={{ height: '580px' }}>
+      <div className="overflow-hidden rounded-md border border-zinc-200" style={{ height: '580px' }}>
         {MapComponents && geoData && MapContainer ? (
           <MapContainer
             center={[26.8467, 80.9462]}  // Lucknow (UP center approximation)
@@ -168,8 +166,8 @@ export default function CrimeMap({ rbac }: { rbac: RoleState }) {
                   <div className="text-xs">
                     <span className="font-semibold font-mono">{spot.fir_number}</span> · {spot.crime_category}
                     {spot.correlation && (
-                      <span className="ml-1">
-                        {spot.correlation.syndicate_flag ? ' 🚨' : ' 🔗'}
+                      <span className="ml-1 text-zinc-500">
+                        {spot.correlation.syndicate_flag ? 'Syndicate' : 'Linked'}
                       </span>
                     )}
                   </div>
@@ -194,7 +192,7 @@ export default function CrimeMap({ rbac }: { rbac: RoleState }) {
                       <div className="pt-1.5 mt-1 border-t border-gray-200">
                         <div className="flex items-center gap-1 mb-0.5">
                           <span className="font-semibold">Pattern match</span>
-                          {spot.correlation.syndicate_flag && <span className="bg-red-100 text-red-700 px-1 rounded">🚨 SYNDICATE</span>}
+                          {spot.correlation.syndicate_flag && <span className="rounded-sm bg-red-50 px-1 text-red-800 ring-1 ring-inset ring-red-200">Syndicate</span>}
                           <span className="text-gray-500">({Math.round(spot.correlation.confidence_score * 100)}%)</span>
                         </div>
                         {spot.correlation.primary_name && <div className="text-gray-600">{spot.correlation.primary_name}</div>}
@@ -203,7 +201,7 @@ export default function CrimeMap({ rbac }: { rbac: RoleState }) {
                         )}
                         <ul className="mt-0.5 space-y-0.5">
                           {spot.correlation.match_reasons.map((r, i) => (
-                            <li key={i} className="text-blue-700 bg-blue-50 rounded px-1 py-0.5">{r}</li>
+                            <li key={i} className="rounded-sm bg-zinc-50 px-1 py-0.5 text-zinc-600 ring-1 ring-inset ring-zinc-200">{r}</li>
                           ))}
                         </ul>
                       </div>
@@ -211,7 +209,7 @@ export default function CrimeMap({ rbac }: { rbac: RoleState }) {
 
                     <button
                       onClick={() => navigate(`/firs/${spot.fir_id}`)}
-                      className="mt-1.5 w-full text-center bg-blue-600 hover:bg-blue-700 text-white rounded py-1"
+                      className="btn btn-primary mt-1.5 w-full"
                     >
                       Go to FIR page
                     </button>
@@ -225,7 +223,7 @@ export default function CrimeMap({ rbac }: { rbac: RoleState }) {
                 center={[pt.lat, pt.lon]}
                 radius={Math.min(30, 8 + pt.weight * 3)}
                 pathOptions={{
-                  fillColor: '#ef4444',
+                  fillColor: '#9f1239',
                   color: 'transparent',
                   fillOpacity: Math.min(0.7, 0.2 + pt.weight * 0.05),
                 }}
@@ -240,7 +238,7 @@ export default function CrimeMap({ rbac }: { rbac: RoleState }) {
             ))}
           </MapContainer>
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-400">
+          <div className="flex h-full items-center justify-center text-[13px] text-zinc-400">
             Loading map components…
           </div>
         )}

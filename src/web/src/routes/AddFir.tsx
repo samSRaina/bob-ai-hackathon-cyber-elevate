@@ -171,30 +171,30 @@ export default function AddFir({ rbac }: { rbac: RoleState }) {
   }
 
   if (rbac.role !== 'STATE_ADMIN' && !rbac.stationId) {
-    return <div className="text-center py-20 text-gray-500">Select a station to add a FIR.</div>
+    return <div className="state-empty">Select a station to add a FIR.</div>
   }
 
   return (
-    <div className="space-y-4 max-w-5xl">
-      <button onClick={() => navigate('/firs')} className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800">
+    <div className="max-w-5xl space-y-4">
+      <button onClick={() => navigate('/firs')} className="link">
         <ChevronLeft size={14} /> Back to FIRs
       </button>
 
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">Add FIR</h1>
+        <h1 className="page-title">Add FIR</h1>
         <button
           onClick={() => setForm(sampleDraft())}
-          className="flex items-center gap-1.5 text-xs bg-white border border-gray-300 hover:border-blue-400 rounded-md px-3 py-1.5 text-gray-600"
+          className="btn btn-secondary"
         >
           <Sparkles size={13} /> Fill sample data
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Form */}
         <div className="lg:col-span-2 space-y-4">
           <Card>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">FIR Details</h3>
+            <h3 className="section-title mb-3">FIR Details</h3>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Police Station">
                 <select
@@ -249,7 +249,7 @@ export default function AddFir({ rbac }: { rbac: RoleState }) {
           </Card>
 
           <Card>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">First Information Contents</h3>
+            <h3 className="section-title mb-3">First Information Contents</h3>
             <Field label="Narrative">
               <textarea
                 className="input"
@@ -272,22 +272,22 @@ export default function AddFir({ rbac }: { rbac: RoleState }) {
 
           <Card>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-700">Accused / Suspects</h3>
-              <button onClick={addSuspect} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800">
+              <h3 className="section-title">Accused / Suspects</h3>
+              <button onClick={addSuspect} className="btn btn-ghost">
                 <Plus size={13} /> Add suspect
               </button>
             </div>
             {form.suspects.length === 0 && (
-              <p className="text-xs text-gray-400">No suspects added — this FIR will be recorded with an unknown accused.</p>
+              <p className="text-2xs text-zinc-400">No suspects added. This FIR will be recorded with an unknown accused.</p>
             )}
             <div className="space-y-3">
               {form.suspects.map((s, i) => (
-                <div key={i} className="grid grid-cols-5 gap-2 items-start pb-3 border-b border-gray-100 last:border-0">
+                <div key={i} className="grid grid-cols-5 items-start gap-2 border-b border-zinc-100 pb-3 last:border-0">
                   <input className="input col-span-1" placeholder="Name" value={s.name} onChange={(e) => updateSuspect(i, 'name', e.target.value)} />
                   <input className="input col-span-1" placeholder="Alias" value={s.alias} onChange={(e) => updateSuspect(i, 'alias', e.target.value)} />
                   <input className="input col-span-1" placeholder="Phone" value={s.phone} onChange={(e) => updateSuspect(i, 'phone', e.target.value)} />
                   <input className="input col-span-1" placeholder="Vehicle no." value={s.vehicle} onChange={(e) => updateSuspect(i, 'vehicle', e.target.value)} />
-                  <button onClick={() => removeSuspect(i)} className="text-gray-400 hover:text-red-600 justify-self-center mt-1.5">
+                  <button onClick={() => removeSuspect(i)} className="icon-btn-danger mt-1 justify-self-center" aria-label="Remove suspect">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -295,12 +295,12 @@ export default function AddFir({ rbac }: { rbac: RoleState }) {
             </div>
           </Card>
 
-          {error && <div className="text-red-600 text-sm bg-red-50 p-3 rounded">{error}</div>}
+          {error && <div className="banner-error">{error}</div>}
 
           <button
             onClick={handleSubmit}
             disabled={!canSubmit || submitting}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-md py-2.5 text-sm font-medium transition-colors"
+            className="btn btn-primary w-full py-2.5"
           >
             {submitting ? 'Saving & running pattern detection…' : 'Submit FIR'}
           </button>
@@ -310,25 +310,25 @@ export default function AddFir({ rbac }: { rbac: RoleState }) {
         <div className="lg:col-span-1">
           <Card className="sticky top-4">
             <div className="flex items-center justify-between mb-1">
-              <h3 className="text-sm font-semibold text-gray-700">Suggested Similar FIRs</h3>
-              {checking && <span className="text-xs text-gray-400">checking…</span>}
+              <h3 className="section-title">Suggested Similar FIRs</h3>
+              {checking && <span className="text-2xs text-zinc-400">Checking…</span>}
             </div>
-            <p className="text-xs text-gray-400 mb-3">
-              Updates live as you fill in the modus operandi and suspect details, before you submit.
+            <p className="mb-3 text-2xs leading-4 text-zinc-500">
+              Updates as you fill in the modus operandi and suspect details, before you submit.
             </p>
 
             {matches.length === 0 && !checking && (
-              <p className="text-xs text-gray-400">No similar FIRs found yet.</p>
+              <p className="text-2xs text-zinc-400">No similar FIRs found yet.</p>
             )}
 
-            <div className="space-y-3 max-h-[600px] overflow-y-auto">
+            <div className="max-h-[600px] space-y-2 overflow-y-auto">
               {matches.map((m) => (
-                <div key={m.id} className="border border-gray-200 rounded-md p-2.5">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-sm text-blue-700">{m.fir_number}</span>
+                <div key={m.id} className="rounded-md border border-zinc-200 p-2.5">
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <span className="font-mono text-[12px] text-zinc-900">{m.fir_number}</span>
                     <Badge variant="default">{m.crime_category}</Badge>
                   </div>
-                  <div className="text-xs text-gray-500 mb-1.5">
+                  <div className="mb-1.5 text-2xs text-zinc-500">
                     {m.police_station} · {m.district}
                     {m.complainant_name && ` · ${m.complainant_name}`}
                   </div>
@@ -348,7 +348,7 @@ export default function AddFir({ rbac }: { rbac: RoleState }) {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="block text-xs text-gray-500 space-y-1">
+    <label className="block space-y-1 text-2xs text-zinc-500">
       <span>{label}</span>
       {children}
     </label>

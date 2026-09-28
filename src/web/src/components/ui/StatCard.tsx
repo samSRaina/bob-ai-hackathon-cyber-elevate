@@ -6,10 +6,10 @@ interface Props {
 
 export default function StatCard({ label, value, sub }: Props) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
-      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
-      <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+    <div className="stat">
+      <p className="text-2xs font-medium tracking-wide text-zinc-500">{label}</p>
+      <p className="mt-1 text-xl font-semibold tabular-nums tracking-tight text-zinc-900">{value}</p>
+      {sub && <p className="mt-0.5 text-2xs text-zinc-400">{sub}</p>}
     </div>
   )
 }

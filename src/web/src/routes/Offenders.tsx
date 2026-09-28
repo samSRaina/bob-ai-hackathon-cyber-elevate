@@ -49,46 +49,45 @@ export default function Offenders({ rbac }: { rbac: RoleState }) {
   }, [rbac.role, rbac.stationId, syndicateOnly])
 
   if (rbac.role !== 'STATE_ADMIN' && !rbac.stationId) {
-    return <div className="text-center py-20 text-gray-500">Select a station to view patterns.</div>
+    return <div className="state-empty">Select a station to view patterns.</div>
   }
 
-  if (loading) return <div className="text-center py-20 text-gray-400">Loading…</div>
-  if (error) return <div className="text-red-600 p-4 rounded bg-red-50">Error: {error}</div>
+  if (loading) return <div className="state-empty">Loading…</div>
+  if (error) return <div className="banner-error">Error: {error}</div>
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-3">
+      <div className="mb-1 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Patterns & Offender Knowledge Base</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{clusters.length} cluster{clusters.length !== 1 ? 's' : ''} detected</p>
+          <h1 className="page-title">Patterns & Offender Knowledge Base</h1>
+          <p className="mt-0.5 text-2xs text-zinc-500">{clusters.length} cluster{clusters.length !== 1 ? 's' : ''} detected</p>
         </div>
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
+        <label className="flex cursor-pointer items-center gap-2 text-[13px] text-zinc-600">
           <input
             type="checkbox"
             checked={syndicateOnly}
             onChange={(e) => setSyndicateOnly(e.target.checked)}
-            className="rounded"
+            className="h-3.5 w-3.5 rounded border-zinc-300 accent-accent"
           />
           Syndicates only
         </label>
       </div>
 
       {clusters.length === 0 && (
-        <Card><p className="text-gray-400 text-sm">No pattern clusters found for this scope.</p></Card>
+        <Card><p className="text-[13px] text-zinc-500">No pattern clusters found for this scope.</p></Card>
       )}
 
       {clusters.map((c) => (
-        <Card key={c.cluster_id} className={c.syndicate_flag ? 'border-red-300' : ''}>
-          {/* Header */}
-          <div className="flex items-start justify-between gap-4 mb-3">
+        <Card key={c.cluster_id} alert={c.syndicate_flag}>
+          <div className="mb-3 flex items-start justify-between gap-4">
             <div className="flex-1">
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className="font-semibold text-lg text-gray-900">
-                  {c.primary_name || <span className="italic text-gray-400">(unknown suspect)</span>}
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <span className="text-[15px] font-semibold tracking-tight text-zinc-900">
+                  {c.primary_name || <span className="font-normal text-zinc-400">(unknown suspect)</span>}
                 </span>
-                {c.syndicate_flag && <Badge variant="red">🚨 SYNDICATE</Badge>}
+                {c.syndicate_flag && <Badge variant="red">Syndicate</Badge>}
               </div>
-              <div className="flex gap-3 text-xs text-gray-500">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-2xs text-zinc-500">
                 <span>{c.linked_fir_ids.length} FIR{c.linked_fir_ids.length !== 1 ? 's' : ''}</span>
                 <span>{c.linked_suspect_ids.length} suspect record{c.linked_suspect_ids.length !== 1 ? 's' : ''}</span>
                 <span>Districts: {c.districts_involved.join(', ') || '—'}</span>
@@ -96,22 +95,20 @@ export default function Offenders({ rbac }: { rbac: RoleState }) {
               </div>
             </div>
             <div className="w-40 shrink-0">
-              <p className="text-xs text-gray-400 mb-1">Confidence</p>
+              <p className="mb-1 text-2xs text-zinc-400">Confidence</p>
               <ConfidenceBar value={c.confidence_score} />
             </div>
           </div>
 
-          {/* Reasoning gloss + match_reasons — always shown */}
           <ReasoningLine reasons={c.match_reasons} gloss={c.reasoning_gloss} />
 
-          {/* Linked FIRs — shown by their human-readable FIR number, same as the FIRs list */}
-          <div className="mt-3 flex flex-wrap gap-1">
-            <span className="text-xs text-gray-500 mr-1">Linked FIRs:</span>
+          <div className="mt-3 flex flex-wrap items-center gap-1">
+            <span className="mr-1 text-2xs text-zinc-500">Linked FIRs</span>
             {(c.linked_firs || []).map((lf) => (
               <Link
                 key={lf.id}
                 to={`/firs/${lf.id}`}
-                className="text-xs font-mono bg-gray-100 hover:bg-blue-50 text-blue-700 px-2 py-0.5 rounded transition-colors"
+                className="chip-link font-mono"
                 title={`${lf.crime_category} · ${lf.district}`}
               >
                 {lf.fir_number}
