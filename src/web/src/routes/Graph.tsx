@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { RoleState } from '../App'
 import { apiFetch } from '../api/client'
+import ReasoningLine from '../components/ui/ReasoningLine'
 import { X } from 'lucide-react'
 
 interface GraphNode {
@@ -17,7 +18,8 @@ interface GraphLink {
   source: string | GraphNode
   target: string | GraphNode
   edge_type: string
-  reason?: string | null
+  reasons?: string[]
+  gloss?: string | null
   confidence?: number
   syndicate?: boolean
 }
@@ -185,10 +187,12 @@ export default function Graph({ rbac }: { rbac: RoleState }) {
                 {typeof selected.data.confidence === 'number' && (
                   <div className="text-2xs text-zinc-500">Confidence <span className="font-mono tabular-nums text-zinc-800">{Math.round(selected.data.confidence * 100)}%</span></div>
                 )}
-                <div className="mt-2 text-2xs font-medium text-zinc-500">Why this is a match</div>
-                <p className="rounded-md border border-zinc-200 bg-zinc-50 p-2 text-[13px] text-zinc-700">
-                  {selected.data.reason || 'No reasoning recorded for this link.'}
-                </p>
+                <div className="text-xs font-semibold text-gray-500 uppercase mt-2">Why this is a match</div>
+                {(selected.data.reasons || []).length > 0 ? (
+                  <ReasoningLine reasons={selected.data.reasons || []} gloss={selected.data.gloss} />
+                ) : (
+                  <p className="text-sm text-gray-700 bg-blue-50 rounded p-2">No reasoning recorded for this link.</p>
+                )}
               </div>
             )}
           </div>

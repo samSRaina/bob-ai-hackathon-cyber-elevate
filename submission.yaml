@@ -1,17 +1,93 @@
-team_name: "CyberElevate"
-project_name: "Bob Engine — FIR Intelligence & Crime Pattern Detector"
-problem_statement: 10
-track: 4
-track_name: "AI & Predictive"
-description: >
-  Bob Engine ingests digitized FIR records, runs deterministic entity resolution
-  and MO-similarity clustering to surface explainable cross-district pattern
-  correlations, and visualizes them on a UP crime map — with automatic alerts
-  when new syndicate links form.
-tech_stack:
-  backend: "Python 3.11, FastAPI, SQLModel, PostgreSQL 16"
-  frontend: "React 18, TypeScript, Vite, Tailwind CSS, Leaflet"
-  ai: "DeepSeek-V4.1-Flash (reasoning gloss only; fully graceful if absent)"
-  tooling: "uv, Bun, Docker"
-demo_video: "demo/demo-video-link.txt"
-live_demo: "demo/live-demo-url.txt"
+# =============================================================================
+# HACKATHON SUBMISSION METADATA
+# =============================================================================
+# Instructions:
+#   - Fill in ALL required fields (marked with # REQUIRED)
+#   - Optional fields can be left as empty strings ""
+#   - Do NOT rename this file — the evaluation pipeline reads it by name
+#   - Use double quotes around all string values
+# =============================================================================
+
+team:
+  name: "CyberElevate"                  # REQUIRED — e.g., "Orion Squad"
+  track: "AI"                           # REQUIRED — one of: AI | DevOps | Sustainability | Open
+  lead:
+    name: "Aryan Sakaria"               # REQUIRED — e.g., "Alice Chen"
+    email: "aryansakaria1@gmail.com"    # REQUIRED — e.g., "alice.chen@ibm.com"
+  members:
+    - name: "Prerana Wagh"              # REQUIRED — Team member 1
+      email: ""
+    - name: "Soham Khardikar"           # Add more members by copying the two lines above
+      email: ""
+    - name: "Samanyu Sameer Raina"
+      email: ""
+
+submission:
+  title: "Bob Engine — FIR Intelligence & Crime Pattern Detector"  # REQUIRED — Project display name
+
+  problem_statement: >                  # REQUIRED — 1-3 sentences. What problem? Who has it?
+    Uttar Pradesh Police's CCTNS system holds over 3 crore digitized FIR records without an
+    automated NLP correlation layer, allowing serial and inter-district criminal syndicates to
+    evade detection because cross-jurisdictional links are never surfaced. Police leadership,
+    investigative officers, and crime analysts are constrained to manual, siloed case reviews
+    that remain completely invisible on geographical maps. Furthermore, investigative teams
+    receive no automated alerts when fragmented FIRs across separate police stations form an
+    active cross-district syndicate pattern.
+
+  solution_summary: >                   # REQUIRED — 1-3 sentences. What did you build?
+    Bob Engine is an explainable FIR intelligence and crime pattern detector that ingests
+    digitized FIR records and surfaces multi-district criminal correlations across Uttar Pradesh.
+    It couples deterministic entity resolution (exact phone numbers, vehicle registrations, and
+    phonetic name matching via Double-Metaphone and RapidFuzz) with sentence-transformer Modus
+    Operandi (MO) semantic clustering to automatically connect disparate cases. Correlated
+    syndicates are visualized on an interactive UP crime map with instant cluster alerts and
+    optional AI reasoning summaries, delivering transparent, evidence-weighted links directly
+    to investigators.
+
+  key_features:                         # REQUIRED — List 3 to 5 specific features you implemented
+    - "Explainable Cross-District Pattern Correlation — Deterministic entity resolution combining exact identifier matching (phone numbers, vehicle registrations) with Double-Metaphone phonetic encoding and RapidFuzz string similarity, outputting human-readable match reasons and evidence-weighted confidence scores."
+    - "Modus Operandi (MO) Semantic Clustering — Vector embeddings via sentence-transformers comparing crime narrative semantics to uncover operational patterns and recurring tactics across disparate police stations."
+    - "Interactive UP Crime Map & Heatmap — Real-time Leaflet geospatial visualization rendering police station spot pins and incident density heatmaps filterable by crime category across Uttar Pradesh districts."
+    - "Automated Real-Time Syndicate Alerts — Event-driven pattern alerting engine that immediately flags newly discovered clusters, expanding networks, and multi-district syndicates exceeding confidence thresholds."
+    - "Hierarchical 4-Tier RBAC & Pluggable AI Gloss — Header-toggled police jurisdictional scoping (State Admin, Range Commissioner, City Police, and Police Inspector) paired with an optional DeepSeek LLM layer for natural-language intelligence glosses that fails gracefully if unconfigured."
+
+  tech_stack:
+    languages: ["Python", "TypeScript", "SQL", "HTML5", "CSS3"]
+    frameworks: ["FastAPI", "React 18", "Vite", "Tailwind CSS", "Leaflet"]
+    ibm_technologies: ["IBM Bob", "watsonx.ai"]
+    databases: ["PostgreSQL 16", "SQLModel", "SQLAlchemy"]
+    other: ["Docker", "Docker Compose", "uv", "Bun", "Sentence-Transformers", "RapidFuzz", "Concurrently"]
+
+  what_we_are_most_proud_of: >          # Optional but recommended — guides judges to your best work
+    We are most proud of our deterministic, explainable pattern correlation engine. In critical
+    policing and public safety operations, black-box AI predictions cannot stand up in court or
+    guide high-stakes field operations. Bob Engine provides complete investigative transparency:
+    every discovered cross-district syndicate is accompanied by clear, human-verifiable match
+    reasons — such as exact vehicle registration matches, normalized phone numbers, and
+    Double-Metaphone phonetic suspect matches — alongside evidence-weighted confidence scores.
+    Furthermore, the entire core intelligence pipeline operates deterministically with zero
+    external cloud dependencies, ensuring 100% operational resilience even when external LLMs
+    are unavailable.
+
+  known_limitations: >                  # Optional but recommended — be honest about gaps
+    Seed MO Narrative Phrasing Diversity: some crime modus-operandi narrative templates share
+    phrasing patterns, occasionally causing unrelated cases to embed closely via MO semantic
+    similarity before deterministic identifier pruning. The system is currently configured for
+    local execution via Docker and native processes; cloud container hosting is pending.
+    The 4-tier RBAC system uses direct request header switching to enable seamless evaluation
+    without requiring a complex production SSO/OIDC login flow. The complete NCRB IIF-I
+    relational data schema is implemented, but unstructured physical paper OCR scanning is
+    planned for a subsequent milestone.
+
+# =============================================================================
+# ARTIFACT LOCATIONS
+# These paths are relative to the repo root. Only change if you moved files.
+# =============================================================================
+artifacts:
+  source_code: "src/"
+  setup_guide: "docs/setup-guide.md"
+  architecture_doc: "docs/architecture.md"
+  demo_video: "demo/demo-video-link.txt"   # URL to hosted video (YouTube, Loom, Box)
+  live_demo: "demo/live-demo-url.txt"      # URL to deployed demo (optional)
+  screenshots: "demo/screenshots/"
+  presentation: "presentation/"

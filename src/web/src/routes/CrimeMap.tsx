@@ -12,6 +12,7 @@ interface SpotCorrelation {
   confidence_score: number
   syndicate_flag: boolean
   match_reasons: string[]
+  reasoning_gloss: string | null
 }
 
 interface SpotPoint {
@@ -195,6 +196,9 @@ export default function CrimeMap({ rbac }: { rbac: RoleState }) {
                           <span className="text-gray-500">({Math.round(spot.correlation.confidence_score * 100)}%)</span>
                         </div>
                         {spot.correlation.primary_name && <div className="text-gray-600">{spot.correlation.primary_name}</div>}
+                        {spot.correlation.reasoning_gloss && (
+                          <p className="text-gray-700 italic border-l-2 border-blue-300 pl-1.5 mt-1">{spot.correlation.reasoning_gloss}</p>
+                        )}
                         <ul className="mt-0.5 space-y-0.5">
                           {spot.correlation.match_reasons.map((r, i) => (
                             <li key={i} className="rounded-sm bg-zinc-50 px-1 py-0.5 text-zinc-600 ring-1 ring-inset ring-zinc-200">{r}</li>

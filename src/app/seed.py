@@ -127,6 +127,8 @@ def run_syndicate_detection(session: Session, triggering_fir_id: int | None = No
     session.flush()
 
     # --- Insert new clusters and update suspect assignments ---
+    from app.engine.reasoning import compose_gloss
+
     new_cluster_objs = []
     for cd in cluster_dicts:
         cluster = RepeatOffenderCluster(
@@ -138,7 +140,13 @@ def run_syndicate_detection(session: Session, triggering_fir_id: int | None = No
             cities_involved=cd["cities_involved"],
             confidence_score=cd["confidence_score"],
             match_reasons=cd["match_reasons"],
-            reasoning_gloss=None,  # populated below
+            # Deterministic gloss, always present — generate_reasoning_glosses()
+            # can upgrade this to an LLM-written one later if a key is configured,
+            # but every cluster gets a readable "why" the moment it's created.
+            reasoning_gloss=compose_gloss(
+                cd["match_reasons"], cd["confidence_score"], cd["primary_name"],
+                cd["syndicate_flag"], cd["districts_involved"],
+            ),
             syndicate_flag=cd["syndicate_flag"],
             updated_at=utcnow(),
         )
@@ -188,8 +196,10 @@ def run_syndicate_detection(session: Session, triggering_fir_id: int | None = No
 
 def generate_reasoning_glosses(session: Session, clusters: list[RepeatOffenderCluster]):
     """
-    For each cluster, call llm_client.explain() to generate a reasoning gloss.
-    On any failure, leave reasoning_gloss as None — fully graceful.
+    For each cluster, try to upgrade its reasoning_gloss to an LLM-written one
+    via llm_client.explain(). Every cluster already has a deterministic gloss
+    set at creation time (see run_syndicate_detection), so on any failure here
+    that gloss is simply left in place — never null.
     """
     from app.engine.llm_client import llm_client, LLMError
 

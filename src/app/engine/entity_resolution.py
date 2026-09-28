@@ -179,15 +179,32 @@ def _name_similarity(a: SuspectRecord, b: SuspectRecord) -> float:
     return composite
 
 
+def describe_name_match(a_names: str, b_names: str, score: float) -> str:
+    """Plain-language sentence for a name/phonetic/alias similarity match — shared
+    with the Add FIR similarity check so the same evidence reads identically everywhere."""
+    pct = round(score * 100)
+    return (
+        f"The suspect name(s) '{a_names}' and '{b_names}' match with {pct}% similarity "
+        f"(spelling, phonetics, and known aliases) - likely the same individual, "
+        f"possibly recorded with slightly different spelling."
+    )
+
+
 def _exact_identifiers(a: SuspectRecord, b: SuspectRecord) -> list[str]:
-    """Return list of shared exact phone/vehicle identifiers."""
+    """Return descriptive, plain-language sentences for shared exact phone/vehicle identifiers."""
     shared = []
     phone_overlap = set(a.phone_numbers) & set(b.phone_numbers)
     for p in phone_overlap:
-        shared.append(f"shared phone number {p}")
+        shared.append(
+            f"The exact same phone number ({p}) appears on both records - "
+            f"strong direct evidence of the same person."
+        )
     vehicle_overlap = set(a.vehicle_numbers) & set(b.vehicle_numbers)
     for v in vehicle_overlap:
-        shared.append(f"shared vehicle {v}")
+        shared.append(
+            f"The exact same vehicle registration ({v}) appears on both records - "
+            f"strong direct evidence of the same person or group."
+        )
     return shared
 
 
@@ -276,7 +293,7 @@ def resolve_entities(
                 a_names = ", ".join(sa.all_name_tokens()) or "(unknown)"
                 b_names = ", ".join(sb.all_name_tokens()) or "(unknown)"
                 ev.add(
-                    f"name similarity {score:.2f}: '{a_names}' ~ '{b_names}'",
+                    describe_name_match(a_names, b_names, score),
                     score,
                     is_exact=False,
                 )

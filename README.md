@@ -54,17 +54,105 @@ Bob Engine is an explainable FIR intelligence and crime pattern detector that in
 ## 📁 Repository Structure
 
 ```
-├── src/                  # All source code
-├── docs/                 # Written documentation
-│   ├── problem-statement.md
-│   ├── solution-overview.md
+Directory structure:
+├── README.md
+├── CONTRIBUTING.md
+├── docker-compose.yml
+├── package.json
+├── submission.yaml
+├── demo/
+│   ├── demo-video-link.txt
+│   ├── live-demo-url.txt
+│   └── screenshots/
+│       ├── README.md
+│       └── .gitkeep
+├── docs/
 │   ├── architecture.md
-│   └── setup-guide.md
-├── demo/                 # Demo artifacts
-│   ├── screenshots/      # App screenshots
-│   └── demo-video-link.txt  # Link to demo video
-├── presentation/         # Slide deck
-└── submission.yaml       # Structured submission metadata
+│   ├── problem-statement.md
+│   ├── setup-guide.md
+│   ├── solution-overview.md
+│   └── template-guide.md
+├── presentation/
+│   ├── README.md
+│   └── .gitkeep
+├── src/
+│   ├── README.md
+│   ├── export_openapi.py
+│   ├── openapi.json
+│   ├── pyproject.toml
+│   ├── requirements.txt
+│   ├── .env.example
+│   ├── .python-version
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── seed.py
+│   │   ├── api/
+│   │   │   ├── __init__.py
+│   │   │   ├── routes_alerts.py
+│   │   │   ├── routes_firs.py
+│   │   │   └── routes_rest.py
+│   │   ├── core/
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py
+│   │   │   ├── database.py
+│   │   │   └── rbac.py
+│   │   ├── data/
+│   │   │   └── generate_seed_firs.py
+│   │   ├── engine/
+│   │   │   ├── __init__.py
+│   │   │   ├── entity_resolution.py
+│   │   │   ├── geo_aggregation.py
+│   │   │   ├── graph_builder.py
+│   │   │   ├── llm_client.py
+│   │   │   ├── mo_similarity.py
+│   │   │   └── pattern_alerts.py
+│   │   ├── models/
+│   │   │   ├── __init__.py
+│   │   │   └── fir_models.py
+│   │   ├── schemas/
+│   │   │   ├── __init__.py
+│   │   │   └── fir_schema.py
+│   │   └── services/
+│   │       ├── __init__.py
+│   │       └── intelligence.py
+│   └── web/
+│       ├── index.html
+│       ├── package.json
+│       ├── postcss.config.mjs
+│       ├── tailwind.config.js
+│       ├── tsconfig.json
+│       ├── tsconfig.node.json
+│       ├── vite.config.ts
+│       └── src/
+│           ├── App.tsx
+│           ├── index.css
+│           ├── main.tsx
+│           ├── api/
+│           │   └── client.ts
+│           ├── components/
+│           │   ├── layout/
+│           │   │   ├── Sidebar.tsx
+│           │   │   └── Topbar.tsx
+│           │   └── ui/
+│           │       ├── Badge.tsx
+│           │       ├── Card.tsx
+│           │       ├── ConfidenceBar.tsx
+│           │       ├── ReasoningLine.tsx
+│           │       └── StatCard.tsx
+│           └── routes/
+│               ├── AddFir.tsx
+│               ├── Alerts.tsx
+│               ├── CrimeMap.tsx
+│               ├── Dashboard.tsx
+│               ├── Firs.tsx
+│               ├── Graph.tsx
+│               └── Offenders.tsx
+└── .github/
+    ├── ISSUE_TEMPLATE/
+    │   └── config.yml
+    └── workflows/
+        └── validate.yml
+
 ```
 
 ---
