@@ -1,0 +1,12 @@
+{
+  "name": "bob-engine",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently \"cd src && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000\" \"cd src/web && bun run dev\"",
+    "seed": "cd src && uv run python -m app.seed",
+    "build:frontend": "cd src/web && bun run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

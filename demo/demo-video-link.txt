@@ -1,15 +1,7 @@
-https://youtu.be/your-demo-video-link-here
+NOT YET RECORDED
 
-Replace the URL above with a link to your demo video.
-
-Accepted platforms:
-  - YouTube (public or unlisted)
-  - Loom (https://www.loom.com/share/...)
-  - IBM Box (https://ibm.box.com/s/...)
-  - Google Drive (set to "Anyone with the link can view")
-
-Video requirements:
-  - Length: 3–5 minutes maximum
-  - Must show the application running (not just slides)
-  - Should walk through at least one key feature end-to-end
-  - Audio narration strongly recommended
+This is a placeholder, not a real video link — recording a screen-capture video
+needs a human. Record a 3-5 minute walkthrough (Dashboard's syndicate card with its
+match reasons, the RBAC toggle changing scope, the Crime Map's spot/heatmap layers,
+and the Offenders/Graph pages) and replace this file's content with the real URL
+(YouTube unlisted, Loom, etc.) before submitting.
