@@ -91,33 +91,8 @@ export default function Dashboard({ rbac }: { rbac: RoleState }) {
 
   return (
     <div className="space-y-8">
-      <section>
-        <div className="mb-4 flex items-center gap-2">
-          <h1 className="page-title">Pattern Correlations</h1>
-          {syndicates.length > 0 && (
-            <Badge variant="red">
-              <AlertTriangle size={10} className="mr-1 inline" />
-              {syndicates.length} Syndicate{syndicates.length > 1 ? 's' : ''}
-            </Badge>
-          )}
-          <span className="page-meta">{clusters.length} cluster{clusters.length !== 1 ? 's' : ''}</span>
-        </div>
-
-        {clusters.length === 0 ? (
-          <Card>
-            <p className="text-[13px] text-zinc-500">No pattern correlations found for this scope.</p>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {clusters.map((c) => (
-              <ClusterCard key={c.cluster_id} cluster={c} />
-            ))}
-          </div>
-        )}
-      </section>
-
       {/* ------------------------------------------------------------------ */}
-      {/* Statistics — secondary panel                                        */}
+      {/* Statistics — shown first, gives scale/context before the detail   */}
       {/* ------------------------------------------------------------------ */}
       {summary && (
         <section>
@@ -174,6 +149,31 @@ export default function Dashboard({ rbac }: { rbac: RoleState }) {
           </div>
         </section>
       )}
+
+      <section>
+        <div className="mb-4 flex items-center gap-2">
+          <h1 className="page-title">Pattern Correlations</h1>
+          {syndicates.length > 0 && (
+            <Badge variant="red">
+              <AlertTriangle size={10} className="mr-1 inline" />
+              {syndicates.length} Syndicate{syndicates.length > 1 ? 's' : ''}
+            </Badge>
+          )}
+          <span className="page-meta">{clusters.length} cluster{clusters.length !== 1 ? 's' : ''}</span>
+        </div>
+
+        {clusters.length === 0 ? (
+          <Card>
+            <p className="text-[13px] text-zinc-500">No pattern correlations found for this scope.</p>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {clusters.map((c) => (
+              <ClusterCard key={c.cluster_id} cluster={c} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }
