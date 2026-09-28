@@ -25,10 +25,10 @@ export default function Topbar({ rbac, setRbac }: Props) {
   const needsStation = rbac.role !== 'STATE_ADMIN'
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-4">
-      <span className="text-sm font-medium text-gray-600">Viewing as:</span>
+    <header className="flex h-12 shrink-0 items-center gap-3 border-b border-zinc-200 bg-white px-6">
+      <span className="text-2xs font-medium text-zinc-500">Viewing as</span>
       <select
-        className="text-sm border border-gray-300 rounded px-2 py-1"
+        className="select-inline"
         value={rbac.role}
         onChange={(e) => setRbac({ role: e.target.value, stationId: rbac.stationId })}
       >
@@ -40,7 +40,7 @@ export default function Topbar({ rbac, setRbac }: Props) {
       </select>
       {needsStation && (
         <select
-          className="text-sm border border-gray-300 rounded px-2 py-1"
+          className="select-inline max-w-xs"
           value={rbac.stationId ?? ''}
           onChange={(e) => setRbac({ role: rbac.role, stationId: e.target.value || null })}
         >
@@ -52,7 +52,7 @@ export default function Topbar({ rbac, setRbac }: Props) {
           ))}
         </select>
       )}
-      <div className="ml-auto text-xs text-gray-400">
+      <div className="ml-auto text-2xs text-zinc-400">
         IBM Bob AI Hackathon · Problem #10
       </div>
     </header>

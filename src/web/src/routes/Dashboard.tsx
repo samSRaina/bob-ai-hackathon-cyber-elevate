@@ -72,14 +72,14 @@ export default function Dashboard({ rbac }: { rbac: RoleState }) {
 
   if (rbac.role !== 'STATE_ADMIN' && !rbac.stationId) {
     return (
-      <div className="text-center py-20 text-gray-500">
+      <div className="state-empty">
         Select a station from the top bar to view data.
       </div>
     )
   }
 
-  if (loading) return <div className="text-center py-20 text-gray-400">Loading…</div>
-  if (error) return <div className="text-red-600 p-4 rounded bg-red-50">Error: {error}</div>
+  if (loading) return <div className="state-empty">Loading…</div>
+  if (error) return <div className="banner-error">Error: {error}</div>
 
   const syndicates = clusters.filter((c) => c.syndicate_flag)
   const topCategories = summary
@@ -90,25 +90,22 @@ export default function Dashboard({ rbac }: { rbac: RoleState }) {
     : []
 
   return (
-    <div className="space-y-6">
-      {/* ------------------------------------------------------------------ */}
-      {/* Pattern Correlations — PRIMARY panel (first & largest)             */}
-      {/* ------------------------------------------------------------------ */}
+    <div className="space-y-8">
       <section>
-        <div className="flex items-center gap-2 mb-4">
-          <h1 className="text-xl font-bold text-gray-900">Pattern Correlations</h1>
+        <div className="mb-4 flex items-center gap-2">
+          <h1 className="page-title">Pattern Correlations</h1>
           {syndicates.length > 0 && (
             <Badge variant="red">
               <AlertTriangle size={10} className="mr-1 inline" />
               {syndicates.length} Syndicate{syndicates.length > 1 ? 's' : ''}
             </Badge>
           )}
-          <span className="text-sm text-gray-400 ml-1">{clusters.length} cluster{clusters.length !== 1 ? 's' : ''}</span>
+          <span className="page-meta">{clusters.length} cluster{clusters.length !== 1 ? 's' : ''}</span>
         </div>
 
         {clusters.length === 0 ? (
           <Card>
-            <p className="text-gray-400 text-sm">No pattern correlations found for this scope.</p>
+            <p className="text-[13px] text-zinc-500">No pattern correlations found for this scope.</p>
           </Card>
         ) : (
           <div className="space-y-3">
@@ -124,31 +121,31 @@ export default function Dashboard({ rbac }: { rbac: RoleState }) {
       {/* ------------------------------------------------------------------ */}
       {summary && (
         <section>
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Statistics</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <h2 className="section-title mb-3">Statistics</h2>
+          <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
             <StatCard label="Total FIRs" value={summary.total_firs} />
             <StatCard label="Pattern Clusters" value={summary.total_clusters} />
             <StatCard label="Syndicates" value={summary.total_syndicates} sub="cross-district" />
             <StatCard label="Districts" value={Object.keys(summary.by_district).length} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <Card>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1">
-                <TrendingUp size={14} /> By Crime Category
+              <h3 className="mb-3 flex items-center gap-1.5 text-[13px] font-medium text-zinc-700">
+                <TrendingUp size={14} strokeWidth={1.75} /> By Crime Category
               </h3>
               <div className="space-y-2">
                 {topCategories.map(([cat, count]) => (
-                  <div key={cat} className="flex items-center justify-between text-sm">
-                    <span className="text-gray-700">{cat}</span>
+                  <div key={cat} className="flex items-center justify-between text-[13px]">
+                    <span className="text-zinc-700">{cat}</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-blue-500 rounded-full"
+                      <div className="meter w-24">
+                        <span
+                          className="bg-accent"
                           style={{ width: `${(count / (summary.total_firs || 1)) * 100}%` }}
                         />
                       </div>
-                      <span className="text-gray-500 font-mono text-xs w-6 text-right">{count}</span>
+                      <span className="w-6 text-right font-mono text-2xs tabular-nums text-zinc-500">{count}</span>
                     </div>
                   </div>
                 ))}
@@ -156,19 +153,19 @@ export default function Dashboard({ rbac }: { rbac: RoleState }) {
             </Card>
 
             <Card>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">By District</h3>
+              <h3 className="mb-3 text-[13px] font-medium text-zinc-700">By District</h3>
               <div className="space-y-2">
                 {topDistricts.map(([dist, count]) => (
-                  <div key={dist} className="flex items-center justify-between text-sm">
-                    <span className="text-gray-700">{dist}</span>
+                  <div key={dist} className="flex items-center justify-between text-[13px]">
+                    <span className="text-zinc-700">{dist}</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-purple-500 rounded-full"
+                      <div className="meter w-24">
+                        <span
+                          className="bg-zinc-400"
                           style={{ width: `${(count / (summary.total_firs || 1)) * 100}%` }}
                         />
                       </div>
-                      <span className="text-gray-500 font-mono text-xs w-6 text-right">{count}</span>
+                      <span className="w-6 text-right font-mono text-2xs tabular-nums text-zinc-500">{count}</span>
                     </div>
                   </div>
                 ))}
@@ -183,17 +180,17 @@ export default function Dashboard({ rbac }: { rbac: RoleState }) {
 
 function ClusterCard({ cluster }: { cluster: Cluster }) {
   return (
-    <Card className={cluster.syndicate_flag ? 'border-red-300 bg-red-50' : ''}>
-      <div className="flex items-start justify-between gap-4 mb-3">
+    <Card alert={cluster.syndicate_flag}>
+      <div className="mb-3 flex items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-gray-900">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[13px] font-semibold text-zinc-900">
               {cluster.primary_name || '(unknown suspect)'}
             </span>
-            {cluster.syndicate_flag && <Badge variant="red">🚨 SYNDICATE</Badge>}
+            {cluster.syndicate_flag && <Badge variant="red">Syndicate</Badge>}
             <Badge variant="purple">{cluster.linked_fir_ids.length} FIRs</Badge>
           </div>
-          <div className="text-xs text-gray-500 mt-1">
+          <div className="mt-1 text-2xs text-zinc-500">
             Districts: {cluster.districts_involved.join(', ') || '—'}
             {cluster.cities_involved.length > 0 && ` · ${cluster.cities_involved.join(', ')}`}
           </div>
@@ -204,13 +201,13 @@ function ClusterCard({ cluster }: { cluster: Cluster }) {
       </div>
       <ReasoningLine reasons={cluster.match_reasons} gloss={cluster.reasoning_gloss} />
       {(cluster.linked_firs || []).length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1">
-          <span className="text-xs text-gray-500 mr-1">Linked FIRs:</span>
+        <div className="mt-3 flex flex-wrap items-center gap-1">
+          <span className="mr-1 text-2xs text-zinc-500">Linked FIRs</span>
           {(cluster.linked_firs || []).map((lf) => (
             <Link
               key={lf.id}
               to={`/firs/${lf.id}`}
-              className="text-xs font-mono bg-white hover:bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-gray-200 transition-colors"
+              className="chip-link font-mono"
               title={`${lf.crime_category} · ${lf.district}`}
             >
               {lf.fir_number}

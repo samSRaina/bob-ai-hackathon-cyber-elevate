@@ -22,11 +22,11 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="flex h-screen overflow-hidden bg-gray-50">
+      <div className="flex h-screen overflow-hidden bg-zinc-50 text-zinc-900">
         <Sidebar />
-        <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <Topbar rbac={rbac} setRbac={setRbac} />
-          <main className="flex-1 overflow-auto p-6">
+          <main className="min-h-0 flex-1 overflow-auto px-6 py-6">
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard rbac={rbac} />} />

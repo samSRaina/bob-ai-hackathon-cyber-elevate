@@ -3,14 +3,216 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply bg-zinc-50 text-zinc-900 antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  ::selection {
+    background: #d9e0e6;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #d4d4d8;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
 }
 
 @layer components {
   .input {
-    @apply w-full text-sm border border-gray-300 rounded-md px-2.5 py-1.5 text-gray-800
-           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500;
+    @apply w-full rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-[13px] text-zinc-900
+           placeholder:text-zinc-400
+           hover:border-zinc-300
+           focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20
+           transition-colors duration-150 ease-in-out;
+  }
+
+  .select-inline {
+    @apply rounded-md border border-zinc-200 bg-white px-2 py-1 text-[13px] text-zinc-800
+           hover:border-zinc-300
+           focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20
+           transition-colors duration-150 ease-in-out;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5
+           text-[13px] font-medium leading-none
+           transition-colors duration-150 ease-in-out
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35 focus-visible:ring-offset-1
+           disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply bg-accent text-white
+           hover:bg-accent-hover
+           active:bg-accent-active
+           disabled:bg-zinc-200 disabled:text-zinc-400;
+  }
+
+  .btn-secondary {
+    @apply border border-zinc-200 bg-white text-zinc-700
+           hover:border-zinc-300 hover:bg-zinc-50
+           active:bg-zinc-100;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent px-2 text-zinc-600
+           hover:bg-zinc-100 hover:text-zinc-900
+           active:bg-zinc-200;
+  }
+
+  .icon-btn {
+    @apply inline-flex items-center justify-center rounded-md p-1 text-zinc-400
+           hover:bg-zinc-100 hover:text-zinc-700
+           active:bg-zinc-200
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35
+           transition-colors duration-150 ease-in-out;
+  }
+
+  .icon-btn-danger {
+    @apply inline-flex items-center justify-center rounded-md p-1 text-zinc-400
+           hover:bg-red-50 hover:text-red-700
+           active:bg-red-100
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35
+           transition-colors duration-150 ease-in-out;
+  }
+
+  .link {
+    @apply inline-flex items-center gap-1 text-[13px] font-medium text-zinc-600
+           hover:text-zinc-900
+           active:text-black
+           focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30
+           transition-colors duration-150 ease-in-out;
+  }
+
+  .card {
+    @apply rounded-md border border-zinc-200 bg-white p-4;
+  }
+
+  .card-alert {
+    box-shadow: inset 2px 0 0 #9f1239;
+  }
+
+  .stat {
+    @apply rounded-md border border-zinc-200 bg-white px-4 py-3;
+  }
+
+  .page-title {
+    @apply text-[15px] font-semibold tracking-tight text-zinc-900;
+  }
+
+  .page-meta {
+    @apply text-[13px] font-normal text-zinc-500;
+  }
+
+  .section-title {
+    @apply text-[13px] font-semibold text-zinc-800;
+  }
+
+  .state-empty {
+    @apply py-16 text-center text-[13px] text-zinc-500;
+  }
+
+  .banner-error {
+    @apply rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-800;
+  }
+
+  .chip-link {
+    @apply inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2 py-1
+           text-left text-[12px] text-zinc-700
+           hover:border-zinc-300 hover:bg-zinc-50
+           active:bg-zinc-100
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30
+           transition-colors duration-150 ease-in-out;
+  }
+
+  .reason {
+    @apply rounded-sm bg-zinc-50 px-1.5 py-0.5 text-[11px] leading-4 text-zinc-600 ring-1 ring-inset ring-zinc-200;
+  }
+
+  .gloss {
+    @apply border-l border-zinc-300 pl-2 text-[13px] text-zinc-700;
+  }
+
+  .table-shell {
+    @apply overflow-hidden rounded-md border border-zinc-200 bg-white;
+  }
+
+  .data-table {
+    @apply w-full text-[13px];
+  }
+
+  .data-table thead {
+    @apply border-b border-zinc-200 bg-zinc-50;
+  }
+
+  .data-table th {
+    @apply px-4 py-2 text-left text-[11px] font-medium tracking-wide text-zinc-500;
+  }
+
+  .data-table td {
+    @apply px-4 py-2.5 text-zinc-700;
+  }
+
+  .data-table tbody tr {
+    @apply cursor-pointer border-b border-zinc-100 transition-colors duration-150 ease-in-out;
+  }
+
+  .data-table tbody tr:hover {
+    @apply bg-zinc-50;
+  }
+
+  .data-table tbody tr:active {
+    @apply bg-zinc-100;
+  }
+
+  .data-table tbody tr:focus-visible {
+    @apply bg-zinc-50 outline-none ring-2 ring-inset ring-accent/30;
+  }
+
+  .data-table tbody tr.is-empty,
+  .data-table tbody tr.is-empty:hover,
+  .data-table tbody tr.is-empty:active {
+    cursor: default;
+    background: transparent;
+  }
+
+  .seg {
+    @apply inline-flex items-center rounded-md border border-zinc-200 bg-zinc-50 p-0.5;
+  }
+
+  .seg-btn {
+    @apply rounded px-3 py-1 text-[13px] font-medium text-zinc-500
+           hover:text-zinc-800
+           active:text-zinc-900
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30
+           transition-colors duration-150 ease-in-out;
+  }
+
+  .seg-btn-on {
+    @apply bg-white text-zinc-900;
+  }
+
+  .meter {
+    @apply h-1 overflow-hidden rounded-full bg-zinc-100;
+  }
+
+  .meter > span {
+    @apply block h-full rounded-full transition-[width] duration-200 ease-in-out;
   }
 }

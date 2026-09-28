@@ -104,11 +104,11 @@ export default function Firs({ rbac }: { rbac: RoleState }) {
   }, [id, rbac.role, rbac.stationId])
 
   if (rbac.role !== 'STATE_ADMIN' && !rbac.stationId) {
-    return <div className="text-center py-20 text-gray-500">Select a station to view FIRs.</div>
+    return <div className="state-empty">Select a station to view FIRs.</div>
   }
 
-  if (loading) return <div className="text-center py-20 text-gray-400">Loading…</div>
-  if (error) return <div className="text-red-600 p-4 rounded bg-red-50">Error: {error}</div>
+  if (loading) return <div className="state-empty">Loading…</div>
+  if (error) return <div className="banner-error">Error: {error}</div>
 
   // Detail view
   if (selectedFir) {
@@ -127,20 +127,20 @@ export default function Firs({ rbac }: { rbac: RoleState }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-900">FIRs <span className="text-gray-400 text-base font-normal">({filtered.length})</span></h1>
-        <div className="flex gap-2">
-          <div className="relative">
-            <Search size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="page-title">FIRs <span className="page-meta">({filtered.length})</span></h1>
+        <div className="flex items-center gap-2">
+          <div className="relative w-56">
+            <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
             <input
-              className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="input pl-8"
               placeholder="Search FIRs…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <select
-            className="text-sm border border-gray-300 rounded-md px-2 py-1.5"
+            className="select-inline"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
           >
@@ -149,52 +149,58 @@ export default function Firs({ rbac }: { rbac: RoleState }) {
           </select>
           <button
             onClick={() => navigate('/firs/new')}
-            className="flex items-center gap-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md px-3 py-1.5"
+            className="btn btn-primary"
           >
-            + Add FIR
+            Add FIR
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
+      <div className="table-shell">
+        <table className="data-table">
+          <thead>
             <tr>
-              <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 uppercase">FIR No.</th>
-              <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Category</th>
-              <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Station / District</th>
-              <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Date</th>
-              <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Linked?</th>
+              <th>FIR No.</th>
+              <th>Category</th>
+              <th>Station / District</th>
+              <th>Date</th>
+              <th>Linked</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((fir) => (
               <tr
                 key={fir.id}
-                className="border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors"
+                tabIndex={0}
                 onClick={() => navigate(`/firs/${fir.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    navigate(`/firs/${fir.id}`)
+                  }
+                }}
               >
-                <td className="px-4 py-2.5 font-mono text-blue-600">{fir.fir_number}</td>
-                <td className="px-4 py-2.5">
+                <td className="font-mono text-[12px] text-zinc-900">{fir.fir_number}</td>
+                <td>
                   <Badge variant={(CATEGORY_COLORS[fir.crime_category] as any) || 'default'}>
                     {fir.crime_category}
                   </Badge>
                 </td>
-                <td className="px-4 py-2.5 text-gray-600">{fir.police_station}<span className="text-gray-400"> · {fir.district}</span></td>
-                <td className="px-4 py-2.5 text-gray-500">{fir.fir_date_time?.slice(0, 10)}</td>
-                <td className="px-4 py-2.5">
+                <td className="text-zinc-600">{fir.police_station}<span className="text-zinc-400"> · {fir.district}</span></td>
+                <td className="tabular-nums text-zinc-500">{fir.fir_date_time?.slice(0, 10)}</td>
+                <td>
                   {fir.correlation ? (
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${fir.correlation.syndicate_flag ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {fir.correlation.syndicate_flag ? '🚨 Syndicate' : '🔗 Linked'}
-                    </span>
+                    <Badge variant={fir.correlation.syndicate_flag ? 'red' : 'default'}>
+                      {fir.correlation.syndicate_flag ? 'Syndicate' : 'Linked'}
+                    </Badge>
                   ) : (
-                    <span className="text-gray-300 text-xs">—</span>
+                    <span className="text-2xs text-zinc-300">—</span>
                   )}
                 </td>
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={5} className="text-center py-8 text-gray-400">No FIRs found</td></tr>
+              <tr className="is-empty"><td colSpan={5} className="py-8 text-center text-zinc-400">No FIRs found</td></tr>
             )}
           </tbody>
         </table>
@@ -209,30 +215,28 @@ function FIRDetail({ fir, onBack }: { fir: FIR; onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <button onClick={onBack} className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mb-2">
+      <button onClick={onBack} className="link">
         <ChevronLeft size={14} /> Back to FIRs
       </button>
 
-      {/* Correlation / Reasoning — shown FRONT AND CENTER */}
       {fir.correlation && (
-        <Card className={fir.correlation.syndicate_flag ? 'border-red-300 bg-red-50' : 'border-blue-200 bg-blue-50'}>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-semibold text-gray-800">Pattern Match</span>
-            {fir.correlation.syndicate_flag && <Badge variant="red">🚨 SYNDICATE</Badge>}
+        <Card alert={fir.correlation.syndicate_flag}>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="text-[13px] font-semibold text-zinc-900">Pattern Match</span>
+            {fir.correlation.syndicate_flag && <Badge variant="red">Syndicate</Badge>}
             <Badge variant="purple">{(fir.correlation.linked_fir_ids || []).length} FIRs linked</Badge>
           </div>
           <div className="mb-2 w-40">
             <ConfidenceBar value={fir.correlation.confidence_score} />
           </div>
           <ReasoningLine reasons={fir.correlation.match_reasons || []} gloss={fir.correlation.reasoning_gloss} />
-          <div className="mt-2 text-xs text-gray-500">
+          <div className="mt-2 text-2xs text-zinc-500">
             Districts: {(fir.correlation.districts_involved || []).join(', ')}
           </div>
 
-          {/* Related FIRs — brief, click for more + a way to jump to that FIR's own page */}
           {(fir.correlation.linked_firs || []).length > 0 && (
-            <div className="mt-3 pt-3 border-t border-black/5">
-              <div className="text-xs font-semibold text-gray-500 uppercase mb-1.5">
+            <div className="mt-3 border-t border-zinc-100 pt-3">
+              <div className="mb-1.5 text-2xs font-medium text-zinc-500">
                 Related FIRs ({(fir.correlation.linked_firs || []).length})
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -240,11 +244,11 @@ function FIRDetail({ fir, onBack }: { fir: FIR; onBack: () => void }) {
                   <button
                     key={lf.id}
                     onClick={() => setPopupFir(lf)}
-                    className="text-xs bg-white border border-gray-200 hover:border-blue-400 hover:bg-blue-50 rounded px-2 py-1 text-left transition-colors"
+                    className="chip-link"
                   >
-                    <span className="font-mono text-blue-700">{lf.fir_number}</span>
-                    <span className="text-gray-500 ml-1.5">{lf.crime_category}</span>
-                    <span className="text-gray-400 ml-1.5">· {lf.district}</span>
+                    <span className="font-mono text-zinc-900">{lf.fir_number}</span>
+                    <span className="text-zinc-500">{lf.crime_category}</span>
+                    <span className="text-zinc-400">· {lf.district}</span>
                   </button>
                 ))}
               </div>
@@ -263,11 +267,11 @@ function FIRDetail({ fir, onBack }: { fir: FIR; onBack: () => void }) {
 
       {/* FIR Header */}
       <Card>
-        <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-lg font-bold">FIR {fir.fir_number}</h2>
+        <div className="mb-4 flex items-center gap-2">
+          <h2 className="font-mono text-[15px] font-semibold tracking-tight text-zinc-900">FIR {fir.fir_number}</h2>
           <Badge variant={(CATEGORY_COLORS[fir.crime_category] as any) || 'default'}>{fir.crime_category}</Badge>
         </div>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-[13px]">
           <Field label="District" value={fir.district} />
           <Field label="Police Station" value={fir.police_station} />
           <Field label="FIR Date/Time" value={fir.fir_date_time?.replace('T', ' ').slice(0, 16)} />
@@ -280,7 +284,7 @@ function FIRDetail({ fir, onBack }: { fir: FIR; onBack: () => void }) {
       {/* Acts & Sections */}
       {(fir.acts_sections || []).length > 0 && (
         <Card>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Acts & Sections</h3>
+          <h3 className="section-title mb-2">Acts & Sections</h3>
           <div className="flex flex-wrap gap-2">
             {(fir.acts_sections as Array<{ act: string; section: string }>).map((a, i) => (
               <Badge key={i} variant="default">{a.act} §{a.section}</Badge>
@@ -291,8 +295,8 @@ function FIRDetail({ fir, onBack }: { fir: FIR; onBack: () => void }) {
 
       {/* Occurrence */}
       <Card>
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">Occurrence of Offence</h3>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+        <h3 className="section-title mb-3">Occurrence of Offence</h3>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-[13px]">
           <Field label="Day" value={fir.occurrence_day as string} />
           <Field label="Date From" value={(fir.occurrence_date_from as string)?.slice(0, 10)} />
           <Field label="Time Period" value={fir.occurrence_time_period as string} />
@@ -305,8 +309,8 @@ function FIRDetail({ fir, onBack }: { fir: FIR; onBack: () => void }) {
 
       {/* Complainant */}
       <Card>
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">Complainant</h3>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+        <h3 className="section-title mb-3">Complainant</h3>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-[13px]">
           <Field label="Name" value={fir.complainant_name as string} />
           <Field label="Relative Name" value={fir.complainant_relative_name as string} />
           <Field label="DOB/Year" value={fir.complainant_dob_or_year as string} />
@@ -319,16 +323,16 @@ function FIRDetail({ fir, onBack }: { fir: FIR; onBack: () => void }) {
       {/* Accused / Suspects */}
       {(fir.suspects || []).length > 0 && (
         <Card>
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">
+          <h3 className="section-title mb-3">
             Accused ({fir.suspects.length})
           </h3>
           {fir.suspects.map((s, i) => (
-            <div key={s.id} className={`${i > 0 ? 'mt-3 pt-3 border-t border-gray-100' : ''}`}>
-              <div className="font-medium text-gray-800 mb-1">
-                {s.name || <span className="italic text-gray-400">Name unknown</span>}
-                {s.alias && <span className="text-gray-400 text-sm ml-2">alias: {s.alias}</span>}
+            <div key={s.id} className={`${i > 0 ? 'mt-3 border-t border-zinc-100 pt-3' : ''}`}>
+              <div className="mb-2 text-[13px] font-medium text-zinc-900">
+                {s.name || <span className="text-zinc-400">Name unknown</span>}
+                {s.alias && <span className="ml-2 text-[12px] font-normal text-zinc-400">alias {s.alias}</span>}
               </div>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+              <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-[13px]">
                 <Field label="Sex" value={s.sex} />
                 <Field label="DOB/Year" value={s.dob_or_year} />
                 <Field label="Build" value={s.build} />
@@ -336,12 +340,12 @@ function FIRDetail({ fir, onBack }: { fir: FIR; onBack: () => void }) {
                 <Field label="Marks" value={s.identification_marks} />
               </div>
               {(s.phone_numbers.length > 0 || s.vehicle_numbers.length > 0) && (
-                <div className="mt-1 flex gap-3 text-xs">
+                <div className="mt-2 flex flex-wrap gap-1.5">
                   {s.phone_numbers.map((p) => (
-                    <Badge key={p} variant="green">📞 {p}</Badge>
+                    <Badge key={p} variant="green">Phone {p}</Badge>
                   ))}
                   {s.vehicle_numbers.map((v) => (
-                    <Badge key={v} variant="yellow">🚗 {v}</Badge>
+                    <Badge key={v} variant="yellow">Plate {v}</Badge>
                   ))}
                 </div>
               )}
@@ -353,13 +357,13 @@ function FIRDetail({ fir, onBack }: { fir: FIR; onBack: () => void }) {
       {/* Properties */}
       {(fir.properties as any[])?.length > 0 && (
         <Card>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Properties of Interest</h3>
-          <div className="space-y-1">
+          <h3 className="section-title mb-2">Properties of Interest</h3>
+          <div className="space-y-2">
             {(fir.properties as any[]).map((p, i) => (
-              <div key={i} className="text-sm flex items-start gap-2">
+              <div key={i} className="flex items-start gap-2 text-[13px]">
                 <Badge variant="default">{p.property_category}</Badge>
-                <span className="text-gray-700">{p.description}</span>
-                {p.value_rupees > 0 && <span className="text-gray-500 ml-auto">₹{p.value_rupees.toLocaleString()}</span>}
+                <span className="text-zinc-700">{p.description}</span>
+                {p.value_rupees > 0 && <span className="ml-auto tabular-nums text-zinc-500">₹{p.value_rupees.toLocaleString()}</span>}
               </div>
             ))}
           </div>
@@ -368,20 +372,20 @@ function FIRDetail({ fir, onBack }: { fir: FIR; onBack: () => void }) {
 
       {/* Narrative */}
       <Card>
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">First Information Contents</h3>
-        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{fir.narrative}</p>
+        <h3 className="section-title mb-2">First Information Contents</h3>
+        <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-zinc-700">{fir.narrative}</p>
         {fir.modus_operandi && (
-          <div className="mt-3 p-2 bg-gray-50 rounded border-l-2 border-blue-300">
-            <span className="text-xs font-semibold text-gray-500 uppercase">Modus Operandi: </span>
-            <span className="text-sm text-gray-700">{fir.modus_operandi}</span>
+          <div className="mt-3 border-l border-zinc-300 bg-zinc-50 px-3 py-2">
+            <span className="text-2xs font-medium text-zinc-500">Modus operandi </span>
+            <span className="text-[13px] text-zinc-700">{fir.modus_operandi}</span>
           </div>
         )}
       </Card>
 
       {/* IO / Action */}
       <Card>
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">Action Taken</h3>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+        <h3 className="section-title mb-3">Action Taken</h3>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-[13px]">
           <Field label="Action" value={fir.action_taken as string} />
           <Field label="IO Name" value={fir.investigating_officer_name as string} />
           <Field label="IO Rank" value={fir.investigating_officer_rank as string} />
@@ -396,27 +400,29 @@ function Field({ label, value, span }: { label: string; value?: string | null; s
   if (!value) return null
   return (
     <div className={span === 2 ? 'col-span-2' : ''}>
-      <span className="text-gray-400 text-xs">{label}: </span>
-      <span className="text-gray-800">{value}</span>
+      <div className="text-2xs text-zinc-500">{label}</div>
+      <div className="mt-0.5 text-[13px] text-zinc-900">{value}</div>
     </div>
   )
 }
 
 function LinkedFirPopup({ fir, onClose, onGoToFir }: { fir: LinkedFirBrief; onClose: () => void; onGoToFir: () => void }) {
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/30 p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-lg shadow-xl max-w-md w-full p-5"
+        className="w-full max-w-md rounded-md border border-zinc-200 bg-white p-5"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="font-semibold text-gray-900 font-mono">{fir.fir_number}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
+        <div className="mb-4 flex items-start justify-between">
+          <h3 className="font-mono text-[13px] font-semibold text-zinc-900">{fir.fir_number}</h3>
+          <button onClick={onClose} className="icon-btn" aria-label="Close">
+            <X size={16} />
           </button>
         </div>
-        <div className="space-y-1.5 text-sm mb-4">
-          <div><span className="text-gray-400 text-xs">Category: </span><Badge variant="default">{fir.crime_category}</Badge></div>
+        <div className="mb-4 space-y-2 text-[13px]">
+          <div className="flex items-center gap-2"><span className="text-2xs text-zinc-500">Category</span><Badge variant="default">{fir.crime_category}</Badge></div>
           <Field label="District" value={fir.district} />
           <Field label="Police Station" value={fir.police_station} />
           <Field label="Date" value={fir.fir_date_time?.replace('T', ' ').slice(0, 16)} />
@@ -424,7 +430,7 @@ function LinkedFirPopup({ fir, onClose, onGoToFir }: { fir: LinkedFirBrief; onCl
         </div>
         <button
           onClick={onGoToFir}
-          className="w-full flex items-center justify-center gap-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md py-2 transition-colors"
+          className="btn btn-primary w-full"
         >
           Go to FIR page <ExternalLink size={14} />
         </button>

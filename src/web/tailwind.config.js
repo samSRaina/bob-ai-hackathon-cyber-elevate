@@ -5,13 +5,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50: '#eff6ff',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
+        accent: {
+          DEFAULT: '#3e4c59',
+          hover: '#323e49',
+          active: '#28333c',
+          soft: '#eef1f4',
         },
-        surface: '#f7f8fa',
+        surface: '#fafafa',
+      },
+      fontSize: {
+        '2xs': ['11px', '16px'],
+      },
+      transitionDuration: {
+        150: '150ms',
+        200: '200ms',
       },
     },
   },
