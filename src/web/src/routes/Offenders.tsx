@@ -1,10 +1,21 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { RoleState } from '../App'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import ConfidenceBar from '../components/ui/ConfidenceBar'
 import ReasoningLine from '../components/ui/ReasoningLine'
 import { apiFetch } from '../api/client'
+
+interface LinkedFirBrief {
+  id: number
+  fir_number: string
+  crime_category: string
+  district: string
+  police_station: string
+  fir_date_time: string | null
+  complainant_name: string | null
+}
 
 interface Cluster {
   cluster_id: string
@@ -18,6 +29,7 @@ interface Cluster {
   match_reasons: string[]
   reasoning_gloss: string | null
   updated_at: string | null
+  linked_firs: LinkedFirBrief[]
 }
 
 export default function Offenders({ rbac }: { rbac: RoleState }) {
@@ -92,17 +104,18 @@ export default function Offenders({ rbac }: { rbac: RoleState }) {
           {/* Reasoning gloss + match_reasons — always shown */}
           <ReasoningLine reasons={c.match_reasons} gloss={c.reasoning_gloss} />
 
-          {/* Linked FIR IDs */}
+          {/* Linked FIRs — shown by their human-readable FIR number, same as the FIRs list */}
           <div className="mt-3 flex flex-wrap gap-1">
             <span className="text-xs text-gray-500 mr-1">Linked FIRs:</span>
-            {c.linked_fir_ids.map((id) => (
-              <a
-                key={id}
-                href={`/firs/${id}`}
-                className="text-xs bg-gray-100 hover:bg-blue-50 text-blue-700 px-2 py-0.5 rounded transition-colors"
+            {c.linked_firs.map((lf) => (
+              <Link
+                key={lf.id}
+                to={`/firs/${lf.id}`}
+                className="text-xs font-mono bg-gray-100 hover:bg-blue-50 text-blue-700 px-2 py-0.5 rounded transition-colors"
+                title={`${lf.crime_category} · ${lf.district}`}
               >
-                FIR #{id}
-              </a>
+                {lf.fir_number}
+              </Link>
             ))}
           </div>
         </Card>

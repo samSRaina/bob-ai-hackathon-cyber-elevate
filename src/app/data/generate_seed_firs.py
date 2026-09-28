@@ -128,6 +128,14 @@ def _syndicate_narrative(variant_mo: str, with_phone: bool, with_vehicle: bool) 
 # Noise crime categories and MO templates
 # ---------------------------------------------------------------------------
 
+# Each category has >= 11 genuinely distinct templates (not paraphrases of one
+# another - different actors, methods, and objects) because the noise-FIR loop
+# below assigns each category's templates round-robin with no repeats across a
+# category's ~10-11 occurrences in the 93-FIR noise batch. A short embedding
+# model (all-MiniLM-L6-v2) barely shifts its output for an appended detail
+# clause, so genuine template diversity - not a cosmetic per-FIR suffix - is
+# what keeps unrelated noise FIRs from being measured as near-identical MO
+# matches and chained into false clusters.
 NOISE_CATEGORIES = {
     "Theft": [
         "Accused broke the lock of complainant's shop at night and stole cash and valuables.",
@@ -135,6 +143,13 @@ NOISE_CATEGORIES = {
         "Complainant's mobile phone was snatched by the accused who fled on a bicycle.",
         "Household items including gold ornaments were stolen from complainant's home during absence.",
         "Cash and documents were stolen from complainant's vehicle parked in the market area.",
+        "Unknown person entered complainant's field and stole irrigation pump and cables overnight.",
+        "Accused scaled the boundary wall of complainant's house and decamped with a laptop and cash.",
+        "Complainant's bicycle was stolen from outside a place of worship during evening prayers.",
+        "Livestock belonging to complainant went missing from the cattle shed; theft suspected.",
+        "Accused, posing as a delivery agent, took complainant's parcel from the doorstep and left no trace.",
+        "Complainant's wallet containing cash and ID cards was picked from his pocket in a crowded bus.",
+        "Copper wiring and fittings were stolen from complainant's under-construction building.",
     ],
     "Assault": [
         "Accused assaulted complainant with a wooden stick over a property dispute, causing injuries.",
@@ -142,6 +157,13 @@ NOISE_CATEGORIES = {
         "Accused persons obstructed complainant on the road and assaulted him using blunt objects.",
         "Complainant sustained injuries after accused attacked him with fists and abuses during a verbal dispute.",
         "Accused persons trespassed into complainant's house and assaulted family members during a land dispute.",
+        "Accused hit complainant with a brick following a dispute over parking space, causing head injury.",
+        "Complainant was slapped and abused by his neighbour over a boundary wall disagreement.",
+        "A group of accused surrounded complainant outside a wedding function and assaulted him.",
+        "Accused struck complainant with a cricket bat during a quarrel over unpaid wages.",
+        "Complainant's father was pushed and beaten by accused during an argument over cattle grazing.",
+        "Accused threw stones at complainant's family during a dispute over shared farmland access.",
+        "Complainant was dragged out of an auto-rickshaw and beaten by accused over a fare dispute.",
     ],
     "Robbery": [
         "Armed accused snatched gold chain from complainant at knifepoint near the bus stand.",
@@ -149,12 +171,26 @@ NOISE_CATEGORIES = {
         "Accused entered complainant's shop, threatened employees with weapon, and took cash from the counter.",
         "Complainant was returning home when accused attacked and robbed him of cash and valuables.",
         "Accused persons forcibly snatched bag from complainant containing cash and important documents.",
+        "Accused pointed a country-made pistol at complainant and robbed him of his motorcycle.",
+        "Complainant's earrings were forcibly pulled off by accused riding pillion on a scooter.",
+        "Accused waylaid complainant on an isolated stretch of road and robbed him of his wristwatch and cash.",
+        "A group of accused surrounded complainant's vehicle at a red light and robbed occupants of valuables.",
+        "Accused entered a petrol pump at night, threatened the cashier, and fled with the day's collection.",
+        "Complainant was robbed of his delivery bag and cash by two accused persons near a railway overbridge.",
+        "Accused snatched a milk vendor's cash box at knifepoint during early morning delivery rounds.",
     ],
     "Kidnapping": [
         "Complainant's minor child was taken away by unknown persons from near the school gate.",
         "Accused abducted complainant's relative under threat and demanded ransom.",
         "Victim was lured by accused on pretext of employment and illegally confined.",
         "Complainant's family member was forcibly taken in a vehicle by unknown accused persons.",
+        "Accused enticed a minor girl away from her home on false promise of marriage.",
+        "Complainant's brother went missing after leaving for work and is suspected to have been abducted.",
+        "Accused forcibly took complainant's son from a playground and demanded money for his release.",
+        "A minor boy was reported missing from a fair; accused suspected of luring him away.",
+        "Complainant's wife was allegedly taken away against her will by accused known to the family.",
+        "Accused confined a domestic worker against her will and denied her contact with family.",
+        "Victim was picked up by accused in a car near the market and held against her will for several hours.",
     ],
     "Fraud": [
         "Accused sold fake property documents to complainant and collected advance payment.",
@@ -162,20 +198,51 @@ NOISE_CATEGORIES = {
         "Complainant invested in a fraudulent scheme promoted by accused who promised high returns.",
         "Accused obtained money from complainant under pretext of securing a government contract.",
         "Complainant gave money to accused for construction work which was never carried out.",
+        "Accused collected registration fees for a fake recruitment drive and then became unreachable.",
+        "Complainant paid advance for agricultural equipment that accused never delivered.",
+        "Accused sold complainant a used vehicle with forged registration papers.",
+        "Complainant was issued post-dated cheques by accused which later bounced due to insufficient funds.",
+        "Accused ran a chit fund scheme and absconded with complainant's monthly contributions.",
+        "Complainant paid accused for visa processing services that were never rendered.",
+        "Accused impersonated a bank official and convinced complainant to pay a fake loan processing fee.",
     ],
     "Murder": [
         "Complainant found deceased family member with multiple stab wounds at their residence.",
         "Accused persons attacked victim with sharp weapons during a dispute and caused fatal injuries.",
         "Body of unknown person found in open field; prima facie appears to be homicide.",
+        "Victim succumbed to injuries after being struck on the head with a heavy object during a quarrel.",
+        "Deceased was found hanging under suspicious circumstances; foul play by accused suspected.",
+        "Accused allegedly poisoned the victim's food following a long-standing family dispute.",
+        "Victim was run over deliberately by accused's vehicle following a heated road-rage altercation.",
+        "Deceased was found with fatal gunshot wounds near a farmhouse; accused absconding.",
+        "Accused strangled the victim during a robbery gone wrong at an isolated location.",
+        "Body recovered from a canal bears injury marks consistent with an assault before death.",
     ],
     "POCSO": [
         "Complainant reports that accused committed sexual assault on minor victim on the stated date.",
         "Minor victim was subjected to inappropriate conduct by accused who is known to the family.",
+        "Accused, a tuition teacher, is alleged to have inappropriately touched a minor student.",
+        "Complainant reports her minor daughter was harassed online by accused, who later attempted to meet her.",
+        "Minor victim disclosed to a school counsellor that a relative had subjected her to inappropriate contact.",
+        "Accused, a neighbour, is alleged to have lured a minor boy into an isolated area and molested him.",
+        "Complainant reports that accused, an acquaintance, sexually harassed a minor at a family gathering.",
+        "Minor victim's guardian reports repeated inappropriate messages sent by accused via social media.",
+        "Accused, employed as household help, is alleged to have inappropriately touched a minor in the family's care.",
+        "Complainant reports that accused exposed himself to minor children near a public park.",
+        "Minor victim's family reports that accused attempted to lure her with sweets and touched her inappropriately.",
     ],
     "Dowry Harassment": [
         "Complainant reports that husband and in-laws have been harassing and demanding dowry.",
         "Accused persons subjected complainant to physical and mental cruelty demanding additional dowry items.",
         "Complainant alleges her in-laws tormented her for bringing insufficient dowry after marriage.",
+        "Complainant states husband threatened to remarry unless her parents paid an additional dowry sum.",
+        "Accused, complainant's mother-in-law, allegedly denied her food and confined her to a room over dowry demands.",
+        "Complainant alleges she was thrown out of her matrimonial home after refusing further dowry demands.",
+        "Accused persons allegedly pressured complainant's family for a vehicle as additional dowry.",
+        "Complainant reports being repeatedly taunted and humiliated by in-laws over the dowry brought at marriage.",
+        "Accused husband allegedly withheld complainant's stridhan jewellery and demanded more money from her parents.",
+        "Complainant alleges her sister-in-law incited the husband to harass her over unmet dowry demands.",
+        "Complainant reports being subjected to verbal abuse and threats after her family could not pay the demanded dowry amount.",
     ],
     "Cyber Fraud": [
         "Complainant received fraudulent link claiming to be a lottery winner and lost money upon clicking.",
@@ -183,8 +250,31 @@ NOISE_CATEGORIES = {
         "Complainant was tricked into purchasing fake goods through an online marketplace by accused.",
         "Accused posed as customs officer and demanded payment for release of parcel.",
         "Complainant lost funds after clicking on link received via SMS promising refund from electricity department.",
+        "Accused called complainant posing as a bank representative and obtained his debit card OTP.",
+        "Complainant's savings were transferred out after accused convinced her to install a remote-access app.",
+        "Accused created a fake investment app and induced complainant to deposit funds that were never returned.",
+        "Complainant received a fake job offer email and paid a security deposit to accused's account.",
+        "Accused hacked complainant's email account and sent fraudulent payment requests to his contacts.",
+        "Complainant was blackmailed by accused using morphed images shared over a messaging app.",
+        "Accused ran a fake customer-care number online and defrauded complainant while resolving a refund query.",
     ],
 }
+
+# Genuine content-varying detail pools mixed into every noise FIR's modus_operandi
+# text so two unrelated noise FIRs never embed as near-identical (see the noise-FIR
+# generation loop below) — a cosmetic suffix alone is not enough since it barely
+# shifts the sentence embedding.
+NOISE_DETAIL_TIMES = [
+    "around 9 PM", "in the early morning hours", "during the afternoon", "late at night",
+    "around 6 AM", "in broad daylight", "after midnight", "around noon",
+    "in the early evening", "just before sunrise", "around 11 PM", "during a rain shower",
+]
+NOISE_DETAIL_LOCATIONS = [
+    "near the bus stand", "outside the local market", "close to the railway crossing",
+    "in a residential colony", "near the temple", "on the main highway",
+    "inside a crowded marketplace", "near a construction site", "on a quiet lane",
+    "close to the school", "near the bank", "outside a petrol pump",
+]
 
 ACTS_BY_CATEGORY = {
     "Theft":           [{"act": "IPC 1860", "section": "379"}, {"act": "IPC 1860", "section": "457"}],
@@ -559,15 +649,37 @@ def generate_all_firs(
     # ------------------------------------------------------------------
     noise_seq_counter: dict[int, int] = {sid: 10 for sid in station_id_map.values()}
     noise_categories = list(NOISE_CATEGORIES.keys())
+    # Guards against the embedding model seeing two noise FIRs as near-identical
+    # (which previously chained unrelated FIRs into false-positive clusters via
+    # MO-similarity edges): every noise FIR's modus_operandi text must vary in
+    # genuine content (time, location, specific detail), not just a cosmetic
+    # suffix, and we verify the final text is never repeated.
+    used_mo_texts: set[str] = set()
+    # Sequential per-category counter: cycling by `i % len(templates)` while `i`
+    # is a global counter is NOT safe (an earlier version of this fix used that
+    # and still produced repeats whenever a category's template count shared a
+    # common factor with the number of categories, e.g. 12 templates / 9
+    # categories both divisible by 3). Walking each category's own list in
+    # order guarantees no template repeats until every template in that
+    # category has been used once.
+    cat_template_idx: dict[str, int] = {cat: 0 for cat in noise_categories}
 
     for i in range(93):
         cat = noise_categories[i % len(noise_categories)]
         templates = NOISE_CATEGORIES[cat]
-        # Each noise FIR gets a UNIQUE MO by combining a base template with a unique detail
-        base_mo = templates[i % len(templates)]
-        # Add a unique suffix to prevent any two noise MOs from being identical
-        unique_detail = f" (Case ref. noise-{i+1:03d})"
-        mo = base_mo  # keep the clean MO for embedding; uniqueness guaranteed by variety of templates + categories
+        base_mo = templates[cat_template_idx[cat] % len(templates)]
+        cat_template_idx[cat] += 1
+
+        time_phrase = NOISE_DETAIL_TIMES[i % len(NOISE_DETAIL_TIMES)]
+        location_phrase = NOISE_DETAIL_LOCATIONS[(i // len(NOISE_DETAIL_TIMES)) % len(NOISE_DETAIL_LOCATIONS)]
+        mo = f"{base_mo} The incident occurred {time_phrase}, {location_phrase}."
+
+        # Hard uniqueness guarantee: if this exact text was already used (can
+        # happen once the detail pools wrap around), append a disambiguating
+        # case reference so no two noise FIRs ever embed as identical text.
+        if mo in used_mo_texts:
+            mo = f"{mo} (Case ref. noise-{i+1:03d})"
+        used_mo_texts.add(mo)
 
         stn_name = all_station_names[i % len(all_station_names)]
         station_data = stations_by_name[stn_name]

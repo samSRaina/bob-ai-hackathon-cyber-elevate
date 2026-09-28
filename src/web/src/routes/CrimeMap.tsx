@@ -1,18 +1,34 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { RoleState } from '../App'
 import { apiFetch } from '../api/client'
 
 // Leaflet CSS must be imported
 import 'leaflet/dist/leaflet.css'
 
+interface SpotCorrelation {
+  cluster_id: string
+  primary_name: string | null
+  confidence_score: number
+  syndicate_flag: boolean
+  match_reasons: string[]
+}
+
 interface SpotPoint {
   fir_id: number
+  fir_number: string
   lat: number
   lon: number
   crime_category: string
   station_name: string
   district: string
   occurrence_date: string | null
+  fir_date_time: string | null
+  complainant_name: string | null
+  occurrence_address: string | null
+  narrative: string | null
+  modus_operandi: string | null
+  correlation: SpotCorrelation | null
 }
 
 interface GeoData {
@@ -37,6 +53,7 @@ function getCategoryColor(cat: string): string {
 }
 
 export default function CrimeMap({ rbac }: { rbac: RoleState }) {
+  const navigate = useNavigate()
   const [geoData, setGeoData] = useState<GeoData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -83,7 +100,7 @@ export default function CrimeMap({ rbac }: { rbac: RoleState }) {
     ? [...new Set(geoData.spots.map((s) => s.crime_category))].sort()
     : []
 
-  const { MapContainer, TileLayer, CircleMarker, Popup } = MapComponents || {}
+  const { MapContainer, TileLayer, CircleMarker, Popup, Tooltip } = MapComponents || {}
 
   return (
     <div className="space-y-3">
@@ -145,12 +162,55 @@ export default function CrimeMap({ rbac }: { rbac: RoleState }) {
                   fillOpacity: 0.8,
                 }}
               >
-                <Popup>
-                  <div className="text-xs space-y-0.5">
-                    <div className="font-semibold">FIR #{spot.fir_id}</div>
+                {/* Hover: brief info */}
+                <Tooltip direction="top" offset={[0, -6]} opacity={0.95}>
+                  <div className="text-xs">
+                    <span className="font-semibold font-mono">{spot.fir_number}</span> · {spot.crime_category}
+                    {spot.correlation && (
+                      <span className="ml-1">
+                        {spot.correlation.syndicate_flag ? ' 🚨' : ' 🔗'}
+                      </span>
+                    )}
+                  </div>
+                </Tooltip>
+
+                {/* Click: full metadata popup */}
+                <Popup minWidth={260}>
+                  <div className="text-xs space-y-1">
+                    <div className="font-semibold font-mono text-sm">{spot.fir_number}</div>
                     <div>{spot.crime_category}</div>
                     <div className="text-gray-500">{spot.station_name} · {spot.district}</div>
-                    {spot.occurrence_date && <div className="text-gray-400">{spot.occurrence_date}</div>}
+                    {spot.fir_date_time && <div className="text-gray-400">{spot.fir_date_time.replace('T', ' ').slice(0, 16)}</div>}
+                    {spot.complainant_name && <div><span className="text-gray-400">Complainant: </span>{spot.complainant_name}</div>}
+                    {spot.occurrence_address && <div><span className="text-gray-400">Address: </span>{spot.occurrence_address}</div>}
+                    {spot.modus_operandi && (
+                      <div className="pt-1 border-t border-gray-100">
+                        <span className="text-gray-400">Modus operandi: </span>{spot.modus_operandi}
+                      </div>
+                    )}
+
+                    {spot.correlation && (
+                      <div className="pt-1.5 mt-1 border-t border-gray-200">
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <span className="font-semibold">Pattern match</span>
+                          {spot.correlation.syndicate_flag && <span className="bg-red-100 text-red-700 px-1 rounded">🚨 SYNDICATE</span>}
+                          <span className="text-gray-500">({Math.round(spot.correlation.confidence_score * 100)}%)</span>
+                        </div>
+                        {spot.correlation.primary_name && <div className="text-gray-600">{spot.correlation.primary_name}</div>}
+                        <ul className="mt-0.5 space-y-0.5">
+                          {spot.correlation.match_reasons.map((r, i) => (
+                            <li key={i} className="text-blue-700 bg-blue-50 rounded px-1 py-0.5">{r}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => navigate(`/firs/${spot.fir_id}`)}
+                      className="mt-1.5 w-full text-center bg-blue-600 hover:bg-blue-700 text-white rounded py-1"
+                    >
+                      Go to FIR page
+                    </button>
                   </div>
                 </Popup>
               </CircleMarker>
@@ -166,6 +226,9 @@ export default function CrimeMap({ rbac }: { rbac: RoleState }) {
                   fillOpacity: Math.min(0.7, 0.2 + pt.weight * 0.05),
                 }}
               >
+                <Tooltip direction="top" offset={[0, -6]} opacity={0.95}>
+                  <div className="text-xs">{pt.weight} FIR{pt.weight !== 1 ? 's' : ''} here</div>
+                </Tooltip>
                 <Popup>
                   <div className="text-xs">{pt.weight} FIRs at this station</div>
                 </Popup>

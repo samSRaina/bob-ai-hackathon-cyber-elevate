@@ -15,7 +15,7 @@ from app.services import intelligence as svc
 router = APIRouter()
 
 
-def _fir_to_dict(fir, suspects=None, cluster=None) -> dict:
+def _fir_to_dict(fir, suspects=None, cluster=None, linked_firs=None) -> dict:
     """Serialize a FIRRecord to a dict including suspects and correlation."""
     d = {
         # Item 1: Header
@@ -95,6 +95,13 @@ def _fir_to_dict(fir, suspects=None, cluster=None) -> dict:
             "linked_fir_ids": cluster.linked_fir_ids or [],
             "match_reasons": cluster.match_reasons or [],
             "reasoning_gloss": cluster.reasoning_gloss,
+            # Brief, human-readable info (fir_number, category, station...) for
+            # every other FIR in this cluster, so the FIR detail view can show
+            # what it's linked to inline rather than just a bare FIR count.
+            "linked_firs": [
+                brief for fid in (cluster.linked_fir_ids or [])
+                if fid != fir.id and (brief := (linked_firs or {}).get(fid))
+            ],
         }
     else:
         d["correlation"] = None
@@ -148,8 +155,11 @@ def list_firs(
 ):
     firs = svc.list_firs(session, scope, crime_category=crime_category,
                          search=search, limit=limit, offset=offset)
+    # Bulk-computed so the FIRs list table can show "Linked / Syndicate"
+    # status and its reasoning per row, not just the single-FIR detail view.
+    cluster_map = svc.get_fir_cluster_map(session, [f.id for f in firs])
     return {
-        "firs": [_fir_to_dict(f) for f in firs],
+        "firs": [_fir_to_dict(f, cluster=cluster_map.get(f.id)) for f in firs],
         "total": len(firs),
     }
 
@@ -166,5 +176,6 @@ def get_fir(
 
     suspects = svc.get_fir_suspects(session, fir_id)
     cluster = svc.get_fir_cluster(session, fir_id)
+    linked_firs = svc.get_fir_briefs(session, cluster.linked_fir_ids or []) if cluster else None
 
-    return _fir_to_dict(fir, suspects=suspects, cluster=cluster)
+    return _fir_to_dict(fir, suspects=suspects, cluster=cluster, linked_firs=linked_firs)

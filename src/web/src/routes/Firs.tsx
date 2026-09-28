@@ -6,7 +6,7 @@ import Badge from '../components/ui/Badge'
 import ReasoningLine from '../components/ui/ReasoningLine'
 import ConfidenceBar from '../components/ui/ConfidenceBar'
 import { apiFetch } from '../api/client'
-import { ChevronLeft, Search } from 'lucide-react'
+import { ChevronLeft, Search, X, ExternalLink } from 'lucide-react'
 
 interface FIR {
   id: number
@@ -39,6 +39,16 @@ interface Suspect {
   cluster_canonical_id: string | null
 }
 
+interface LinkedFirBrief {
+  id: number
+  fir_number: string
+  crime_category: string
+  district: string
+  police_station: string
+  fir_date_time: string | null
+  complainant_name: string | null
+}
+
 interface Correlation {
   cluster_id: string
   primary_name: string | null
@@ -48,6 +58,7 @@ interface Correlation {
   linked_fir_ids: number[]
   match_reasons: string[]
   reasoning_gloss: string | null
+  linked_firs: LinkedFirBrief[]
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -187,6 +198,9 @@ export default function Firs({ rbac }: { rbac: RoleState }) {
 }
 
 function FIRDetail({ fir, onBack }: { fir: FIR; onBack: () => void }) {
+  const navigate = useNavigate()
+  const [popupFir, setPopupFir] = useState<LinkedFirBrief | null>(null)
+
   return (
     <div className="space-y-4">
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mb-2">
@@ -208,7 +222,37 @@ function FIRDetail({ fir, onBack }: { fir: FIR; onBack: () => void }) {
           <div className="mt-2 text-xs text-gray-500">
             Districts: {fir.correlation.districts_involved.join(', ')}
           </div>
+
+          {/* Related FIRs — brief, click for more + a way to jump to that FIR's own page */}
+          {fir.correlation.linked_firs.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-black/5">
+              <div className="text-xs font-semibold text-gray-500 uppercase mb-1.5">
+                Related FIRs ({fir.correlation.linked_firs.length})
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {fir.correlation.linked_firs.map((lf) => (
+                  <button
+                    key={lf.id}
+                    onClick={() => setPopupFir(lf)}
+                    className="text-xs bg-white border border-gray-200 hover:border-blue-400 hover:bg-blue-50 rounded px-2 py-1 text-left transition-colors"
+                  >
+                    <span className="font-mono text-blue-700">{lf.fir_number}</span>
+                    <span className="text-gray-500 ml-1.5">{lf.crime_category}</span>
+                    <span className="text-gray-400 ml-1.5">· {lf.district}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </Card>
+      )}
+
+      {popupFir && (
+        <LinkedFirPopup
+          fir={popupFir}
+          onClose={() => setPopupFir(null)}
+          onGoToFir={() => { setPopupFir(null); navigate(`/firs/${popupFir.id}`) }}
+        />
       )}
 
       {/* FIR Header */}
@@ -348,6 +392,37 @@ function Field({ label, value, span }: { label: string; value?: string | null; s
     <div className={span === 2 ? 'col-span-2' : ''}>
       <span className="text-gray-400 text-xs">{label}: </span>
       <span className="text-gray-800">{value}</span>
+    </div>
+  )
+}
+
+function LinkedFirPopup({ fir, onClose, onGoToFir }: { fir: LinkedFirBrief; onClose: () => void; onGoToFir: () => void }) {
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-lg shadow-xl max-w-md w-full p-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between mb-3">
+          <h3 className="font-semibold text-gray-900 font-mono">{fir.fir_number}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="space-y-1.5 text-sm mb-4">
+          <div><span className="text-gray-400 text-xs">Category: </span><Badge variant="default">{fir.crime_category}</Badge></div>
+          <Field label="District" value={fir.district} />
+          <Field label="Police Station" value={fir.police_station} />
+          <Field label="Date" value={fir.fir_date_time?.replace('T', ' ').slice(0, 16)} />
+          <Field label="Complainant" value={fir.complainant_name} />
+        </div>
+        <button
+          onClick={onGoToFir}
+          className="w-full flex items-center justify-center gap-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md py-2 transition-colors"
+        >
+          Go to FIR page <ExternalLink size={14} />
+        </button>
+      </div>
     </div>
   )
 }

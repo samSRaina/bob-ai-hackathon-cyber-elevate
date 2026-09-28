@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { RoleState } from '../App'
 import Card from '../components/ui/Card'
 import StatCard from '../components/ui/StatCard'
@@ -7,6 +8,16 @@ import ConfidenceBar from '../components/ui/ConfidenceBar'
 import ReasoningLine from '../components/ui/ReasoningLine'
 import { apiFetch } from '../api/client'
 import { AlertTriangle, TrendingUp, FileText, Users } from 'lucide-react'
+
+interface LinkedFirBrief {
+  id: number
+  fir_number: string
+  crime_category: string
+  district: string
+  police_station: string
+  fir_date_time: string | null
+  complainant_name: string | null
+}
 
 interface Cluster {
   cluster_id: string
@@ -18,6 +29,7 @@ interface Cluster {
   linked_fir_ids: number[]
   match_reasons: string[]
   reasoning_gloss: string | null
+  linked_firs: LinkedFirBrief[]
 }
 
 interface Summary {
@@ -191,6 +203,21 @@ function ClusterCard({ cluster }: { cluster: Cluster }) {
         </div>
       </div>
       <ReasoningLine reasons={cluster.match_reasons} gloss={cluster.reasoning_gloss} />
+      {cluster.linked_firs.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1">
+          <span className="text-xs text-gray-500 mr-1">Linked FIRs:</span>
+          {cluster.linked_firs.map((lf) => (
+            <Link
+              key={lf.id}
+              to={`/firs/${lf.id}`}
+              className="text-xs font-mono bg-white hover:bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-gray-200 transition-colors"
+              title={`${lf.crime_category} · ${lf.district}`}
+            >
+              {lf.fir_number}
+            </Link>
+          ))}
+        </div>
+      )}
     </Card>
   )
 }

@@ -77,6 +77,59 @@ def get_fir_cluster(session: Session, fir_id: int) -> Optional[RepeatOffenderClu
     return None
 
 
+def get_fir_cluster_map(session: Session, fir_ids: list[int]) -> dict[int, RepeatOffenderCluster]:
+    """Bulk version of get_fir_cluster: one query for suspects + one for
+    clusters instead of N+1, so the FIRs LIST view (not just the detail view)
+    can show its "Linked / Syndicate" status and reasoning for every row.
+    """
+    if not fir_ids:
+        return {}
+    suspects = session.exec(
+        select(SuspectEntity).where(col(SuspectEntity.fir_id).in_(fir_ids))
+    ).all()
+    canonical_ids = {s.cluster_canonical_id for s in suspects if s.cluster_canonical_id}
+    if not canonical_ids:
+        return {}
+    clusters = session.exec(
+        select(RepeatOffenderCluster).where(
+            col(RepeatOffenderCluster.canonical_id).in_(canonical_ids)
+        )
+    ).all()
+    clusters_by_canonical = {c.canonical_id: c for c in clusters}
+
+    fir_to_cluster: dict[int, RepeatOffenderCluster] = {}
+    for s in suspects:
+        if s.cluster_canonical_id and s.cluster_canonical_id in clusters_by_canonical:
+            fir_to_cluster.setdefault(s.fir_id, clusters_by_canonical[s.cluster_canonical_id])
+    return fir_to_cluster
+
+
+def get_fir_briefs(session: Session, fir_ids: list[int]) -> dict[int, dict]:
+    """Bulk-fetch brief display fields for a set of FIR ids, keyed by id.
+
+    Used everywhere a cluster/correlation view needs to render its linked FIRs
+    by their human-readable fir_number (not the raw internal id) without an
+    N+1 query per linked FIR.
+    """
+    if not fir_ids:
+        return {}
+    rows = session.exec(
+        select(FIRRecord).where(col(FIRRecord.id).in_(fir_ids))
+    ).all()
+    return {
+        f.id: {
+            "id": f.id,
+            "fir_number": f.fir_number,
+            "crime_category": f.crime_category,
+            "district": f.district,
+            "police_station": f.police_station,
+            "fir_date_time": str(f.fir_date_time) if f.fir_date_time else None,
+            "complainant_name": f.complainant_name,
+        }
+        for f in rows
+    }
+
+
 # ---------------------------------------------------------------------------
 # Cluster / offender queries
 # ---------------------------------------------------------------------------
@@ -196,12 +249,37 @@ def get_heatmap(
     all_stations = list(session.exec(select(PoliceStation)).all())
     scoped_firs = list_firs(session, scope, limit=10000)
 
+    # Map each scoped FIR to its cluster (if any) so the map's click popup can
+    # show the same correlation/reasoning that Dashboard, Offenders, and the
+    # FIR detail view show — clustering relationships must be visible
+    # everywhere a FIR is surfaced, including the map.
+    fir_to_cluster = get_fir_cluster_map(session, [f.id for f in scoped_firs])
+
+    def _correlation_brief(fir_id: int) -> Optional[dict]:
+        c = fir_to_cluster.get(fir_id)
+        if not c:
+            return None
+        return {
+            "cluster_id": c.canonical_id,
+            "primary_name": c.primary_name,
+            "confidence_score": c.confidence_score,
+            "syndicate_flag": c.syndicate_flag,
+            "match_reasons": c.match_reasons or [],
+        }
+
     fir_dicts = [
         {
             "id": f.id,
             "station_id": f.station_id,
             "crime_category": f.crime_category,
             "occurrence_date_from": f.occurrence_date_from,
+            "fir_number": f.fir_number,
+            "fir_date_time": str(f.fir_date_time) if f.fir_date_time else None,
+            "complainant_name": f.complainant_name,
+            "occurrence_address": f.occurrence_address,
+            "narrative": f.narrative,
+            "modus_operandi": f.modus_operandi,
+            "correlation": _correlation_brief(f.id),
         }
         for f in scoped_firs
     ]

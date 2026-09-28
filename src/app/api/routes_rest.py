@@ -37,6 +37,13 @@ def list_offenders(
     session: Session = Depends(get_session),
 ):
     clusters = svc.list_clusters(session, scope, syndicate_only=syndicate_only)
+
+    # Bulk-fetch brief info (fir_number etc.) for every linked FIR across all
+    # clusters in one query, so cluster cards can render human-readable FIR
+    # numbers instead of raw internal ids — matching the FIRs list/detail views.
+    all_fir_ids = sorted({fid for c in clusters for fid in (c.linked_fir_ids or [])})
+    fir_briefs = svc.get_fir_briefs(session, all_fir_ids)
+
     return {
         "offenders": [
             {
@@ -51,6 +58,9 @@ def list_offenders(
                 "match_reasons": c.match_reasons or [],
                 "reasoning_gloss": c.reasoning_gloss,
                 "updated_at": str(c.updated_at) if c.updated_at else None,
+                "linked_firs": [
+                    fir_briefs[fid] for fid in (c.linked_fir_ids or []) if fid in fir_briefs
+                ],
             }
             for c in clusters
         ],
@@ -71,6 +81,10 @@ def get_dossier(
     s = result["suspect"]
     fir = result["fir"]
     cluster = result["cluster"]
+    linked_firs = (
+        svc.get_fir_briefs(session, [fid for fid in (cluster.linked_fir_ids or []) if fid != fir.id])
+        if cluster else {}
+    )
 
     return {
         "suspect": {
@@ -107,6 +121,7 @@ def get_dossier(
             "reasoning_gloss": cluster.reasoning_gloss,
             "linked_fir_ids": cluster.linked_fir_ids or [],
             "districts_involved": cluster.districts_involved or [],
+            "linked_firs": list(linked_firs.values()),
         } if cluster else None,
     }
 

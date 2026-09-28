@@ -2,7 +2,11 @@
 Geo aggregation engine.
 
 Produces:
-  spot_points   — individual FIR pins: {fir_id, lat, lon, crime_category, station_name, district, occurrence_date}
+  spot_points   — individual FIR pins: {fir_id, fir_number, lat, lon, crime_category,
+                  station_name, district, occurrence_date, fir_date_time,
+                  complainant_name, occurrence_address, narrative, modus_operandi,
+                  correlation} — enough for both a brief hover tooltip and a full
+                  click popup on the map, including cluster/pattern reasoning.
   heatmap_points — aggregated density: {lat, lon, weight} (count of FIRs per station per category)
 
 Both are filterable by crime_category and scoped by the RBAC station_ids list.
@@ -58,12 +62,19 @@ def compute_geo_data(
 
         spots.append({
             "fir_id": fir["id"],
+            "fir_number": fir.get("fir_number"),
             "lat": st["latitude"] + jitter_lat,
             "lon": st["longitude"] + jitter_lon,
             "crime_category": fir.get("crime_category", ""),
             "station_name": st["name"],
             "district": st.get("district", ""),
             "occurrence_date": str(fir.get("occurrence_date_from", ""))[:10] if fir.get("occurrence_date_from") else None,
+            "fir_date_time": fir.get("fir_date_time"),
+            "complainant_name": fir.get("complainant_name"),
+            "occurrence_address": fir.get("occurrence_address"),
+            "narrative": fir.get("narrative"),
+            "modus_operandi": fir.get("modus_operandi"),
+            "correlation": fir.get("correlation"),
         })
 
         # Heatmap: aggregate at station × category
