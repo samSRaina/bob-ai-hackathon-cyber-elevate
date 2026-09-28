@@ -10,7 +10,7 @@
 
 team:
   name: "CyberElevate"                  # REQUIRED — e.g., "Orion Squad"
-  track: "AI & Predictive"                           # REQUIRED — one of: AI | DevOps | Sustainability | Open
+  track: "AI"                           # REQUIRED — one of: AI | DevOps | Sustainability | Open
   lead:
     name: "Aryan Sakaria"               # REQUIRED — e.g., "Alice Chen"
     email: "aryansakaria1@gmail.com"    # REQUIRED — e.g., "alice.chen@ibm.com"
