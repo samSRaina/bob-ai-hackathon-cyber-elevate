@@ -147,8 +147,9 @@ def check_similarity(session: Session, draft) -> list[dict]:
     Returns a list of match dicts sorted by confidence descending, one per
     matching FIR (its best-evidence suspect + reasons), capped to 15.
     """
-    from app.engine.entity_resolution import SuspectRecord, _exact_identifiers, _should_block, _name_similarity
+    from app.engine.entity_resolution import SuspectRecord, _exact_identifiers, _should_block, _name_similarity, describe_name_match
     from app.engine.mo_similarity import MORecord, compute_mo_edges
+    from app.engine.reasoning import compose_gloss
 
     if not draft.suspects and not (draft.modus_operandi or "").strip():
         return []
@@ -201,7 +202,7 @@ def check_similarity(session: Session, draft) -> list[dict]:
                 if score * 100 >= 82:
                     a_names = ", ".join(draft_record.all_name_tokens()) or "(unknown)"
                     b_names = ", ".join(existing.all_name_tokens()) or "(unknown)"
-                    reason = f"name similarity {score:.2f}: '{a_names}' ~ '{b_names}'"
+                    reason = describe_name_match(a_names, b_names, score)
                     fir_evidence[existing.fir_id].append((reason, score, False))
 
     # --- Draft MO text vs every existing FIR's MO text ---
@@ -227,6 +228,10 @@ def check_similarity(session: Session, draft) -> list[dict]:
 
     fir_briefs = get_fir_briefs(session, list(fir_evidence.keys()))
 
+    # The name the officer is actually typing into the draft form, if any —
+    # used as the "who" in the gloss (falls back to a generic phrase otherwise).
+    draft_name = next((s.name for s in draft.suspects if s.name), None)
+
     matches = []
     for fid, evidence in fir_evidence.items():
         brief = fir_briefs.get(fid)
@@ -240,6 +245,7 @@ def check_similarity(session: Session, draft) -> list[dict]:
             **brief,
             "confidence": round(confidence, 4),
             "match_reasons": reasons,
+            "reasoning_gloss": compose_gloss(reasons, confidence, draft_name),
         })
 
     matches.sort(key=lambda m: m["confidence"], reverse=True)
@@ -381,6 +387,7 @@ def get_heatmap(
             "confidence_score": c.confidence_score,
             "syndicate_flag": c.syndicate_flag,
             "match_reasons": c.match_reasons or [],
+            "reasoning_gloss": c.reasoning_gloss,
         }
 
     fir_dicts = [
@@ -455,6 +462,7 @@ def get_graph(session: Session, scope: Scope) -> dict:
             "canonical_id": c.canonical_id,
             "linked_suspect_ids": c.linked_suspect_ids or [],
             "match_reasons": c.match_reasons or [],
+            "reasoning_gloss": c.reasoning_gloss,
             "confidence_score": c.confidence_score,
             "syndicate_flag": c.syndicate_flag,
         }

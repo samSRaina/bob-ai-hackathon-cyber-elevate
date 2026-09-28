@@ -32,6 +32,7 @@ interface SimilarMatch {
   complainant_name: string | null
   confidence: number
   match_reasons: string[]
+  reasoning_gloss: string | null
 }
 
 const CRIME_CATEGORIES = [
@@ -334,7 +335,7 @@ export default function AddFir({ rbac }: { rbac: RoleState }) {
                   <div className="mb-1.5 w-28">
                     <ConfidenceBar value={m.confidence} />
                   </div>
-                  <ReasoningLine reasons={m.match_reasons} />
+                  <ReasoningLine reasons={m.match_reasons} gloss={m.reasoning_gloss} />
                 </div>
               ))}
             </div>

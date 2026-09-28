@@ -88,7 +88,17 @@ def compute_mo_edges(
 
             score = cosine_similarity(embeddings[i], embeddings[j])
             if score >= threshold:
-                reason = f"MO similarity {score:.2f} (embedded modus operandi match)"
+                reason = describe_mo_match(score)
                 edges.append((ra.suspect_id, rb.suspect_id, score, reason))
 
     return edges
+
+
+def describe_mo_match(score: float) -> str:
+    """Plain-language sentence for an MO-embedding similarity match — shared with
+    the Add FIR similarity check so the same evidence reads identically everywhere."""
+    pct = round(score * 100)
+    return (
+        f"The described modus operandi (method of crime) is {pct}% textually similar "
+        f"to another case - suggesting a matching criminal technique or pattern."
+    )

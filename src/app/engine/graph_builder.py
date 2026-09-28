@@ -53,14 +53,15 @@ def build_graph(
     for cluster in clusters:
         member_ids = cluster.get("linked_suspect_ids", [])
         reasons = cluster.get("match_reasons", [])
-        reason_str = "; ".join(reasons[:2]) if reasons else "linked"
+        gloss = cluster.get("reasoning_gloss") or ""
         for i in range(len(member_ids)):
             for j in range(i + 1, len(member_ids)):
                 G.add_edge(
                     f"suspect:{member_ids[i]}",
                     f"suspect:{member_ids[j]}",
                     edge_type="LINKED_TO",
-                    reason=reason_str,
+                    reasons=reasons,
+                    gloss=gloss,
                     confidence=cluster.get("confidence_score", 0.0),
                     syndicate=cluster.get("syndicate_flag", False),
                 )
@@ -87,7 +88,8 @@ def graph_to_json(G: nx.Graph) -> dict:
             "source": u,
             "target": v,
             "edge_type": data.get("edge_type", "UNKNOWN"),
-            "reason": data.get("reason"),
+            "reasons": data.get("reasons", []),
+            "gloss": data.get("gloss"),
             "confidence": data.get("confidence"),
             "syndicate": data.get("syndicate", False),
         })
